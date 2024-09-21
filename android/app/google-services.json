@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1064355861085",
+    "firebase_url": "https://shqanda-74a3f-default-rtdb.firebaseio.com",
+    "project_id": "shqanda-74a3f",
+    "storage_bucket": "shqanda-74a3f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1064355861085:android:7f65e3812764b169f873b4",
+        "android_client_info": {
+          "package_name": "com.biazin.shqanda"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1064355861085-0qab0flb2b0iebacsqoflbemm27g59su.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.biazin.shqanda",
+            "certificate_hash": "83bea9c82e676f6e98f61c85f2df085a6e5e2bfc"
+          }
+        },
+        {
+          "client_id": "1064355861085-dsp5fm1sj0ohbtv16r04qsghpeqm3uan.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfusMr1Jy03tZpm6xFhFlxLXRGMPpVdVM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1064355861085-dsp5fm1sj0ohbtv16r04qsghpeqm3uan.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1064355861085-7g701k128i6hrtntoql10k32nqsql1lt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.shqandaApplication"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
