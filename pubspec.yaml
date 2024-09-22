@@ -45,6 +45,10 @@
     image_picker: ^0.8.4+2
     flutter_facebook_auth: ^3.5.6
     get: ^4.3.8
+    youtube_player_flutter:
+    youtube_player_iframe:
+    cached_network_image:
+    url_launcher:
     get_storage: ^2.0.3
     logger: ^1.1.0
     google_sign_in: ^5.2.1

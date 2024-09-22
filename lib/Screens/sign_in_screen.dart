@@ -268,30 +268,30 @@ margin: EdgeInsets.only(top: 50),
               Padding(
                 padding: const EdgeInsets.only(top: 100.0),
                 child: MyTextFormField(
-                  name: "Email".tr,
+                  name: "اسم المستخدم",
                   controller: email,
                 ),
               ),
               SizedBox(
                 height: 10,
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: PasswordTextFormField(
-                  textFieldFocusNode: textFieldFocusNode,
-                  obserText: obserText,
-                  name: "Password".tr,
-                  controller: password,
-                  onTap: () {
-
-                 obserText =!obserText;
-
-                  //  FocusScope.of(context).unfocus();
-                  },
-                ),
-              ),
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 20),
+              //   child: PasswordTextFormField(
+              //     textFieldFocusNode: textFieldFocusNode,
+              //     obserText: obserText,
+              //     name: "Password".tr,
+              //     controller: password,
+              //     onTap: () {
+              //
+              //    obserText =!obserText;
+              //
+              //     //  FocusScope.of(context).unfocus();
+              //     },
+              //   ),
+              // ),
               SizedBox(
-                height: 10,
+                height: 90,
               ),
               // Padding(
               //   padding: const EdgeInsets.all(8.0),
@@ -322,29 +322,31 @@ margin: EdgeInsets.only(top: 50),
                         borderSide: BorderSide.none
                     ),
                     onPressed: (){
-                  vaildation();
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>HomePage()));
+
+                      //vaildation();
                 }),
               ): Center(
             child: CircularProgressIndicator(),
     ),
-              InkWell(
-                onTap:(){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>SignUp()));
-                },
-                child:Center(
-                  child:Text.rich(
-                      TextSpan(
-                          text:'Have not an account?'.tr, style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold,color: Color(0xFF000000),),
-                          children: <InlineSpan>[
-                            TextSpan(
-                              text: 'Create account'.tr,
-                              style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold,color: Color(0xFFF2C51D),),
-                            )
-                          ]
-                      )
-                  ),
-                ),
-              ),
+              // InkWell(
+              //   onTap:(){
+              //     Navigator.push(context, MaterialPageRoute(builder: (context)=>SignUp()));
+              //   },
+              //   child:Center(
+              //     child:Text.rich(
+              //         TextSpan(
+              //             text:'Have not an account?'.tr, style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold,color: Color(0xFF000000),),
+              //             children: <InlineSpan>[
+              //               TextSpan(
+              //                 text: 'Create account'.tr,
+              //                 style: TextStyle(fontSize: 12,fontWeight: FontWeight.bold,color: Color(0xFFF2C51D),),
+              //               )
+              //             ]
+              //         )
+              //     ),
+              //   ),
+              // ),
               Container(
                 margin: EdgeInsets.only(top: 10),
                 child: Text('OR With',style: TextStyle(color: Color(0xFFF2C51D),fontSize: 16,fontWeight: FontWeight.bold),),
@@ -389,74 +391,74 @@ margin: EdgeInsets.only(top: 50),
         appBar: AppBar(
           elevation: 0,
           actions: [
-            Container(
-              margin: EdgeInsets.only(left: 20,right: 20),
-              child: GetBuilder<AppLanguage>(
-                init: AppLanguage(),
-                builder: (controller) {
-                  return Container(
-                    // width: double.infinity,
-                    // height: 50,
-                    child: Center(
-                      child: DropdownButton(
-                        icon: Icon(Icons.language,color: Color(0xFFF2C51D),),
-                        iconEnabledColor: Colors.white,
-                        underline: SizedBox(),
-                        value: myString,
-                        onChanged: (value) async {
-                          controller.changeLanguage('${value}');
-                          setState(() {
-                            _selectedLang = '${value}';
-                          });
-                          Get.updateLocale(Locale(value.toString()));
-                          SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                          prefs.setString('value', '${value}');
-                          //  print(value);
-                          SharedPreferences x =
-                          await SharedPreferences.getInstance();
-                          setState(() {
-                            myString = x.getString('value');
-                            print("shared:$myString");
-                          });
-                        },
-                        items: [
-                          DropdownMenuItem(
-                              child: Container(
-                                height: 30,
-                                width: 100,
-                                color: Color(0xFFF2C51D),
-                                child: Center(
-                                  child: Text(
-                                    'English',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15),
-                                  ),
-                                ),
-                              ),
-                              value: 'en'),
-                          DropdownMenuItem(
-                              child: Container(
-                                  height: 30,
-                                  width: 100,
-                                  color: Color(0xFFF2C51D),
-                                  child: Center(
-                                      child: Text('العربيه',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight:
-                                              FontWeight.bold,
-                                              fontSize: 15)))),
-                              value: 'ar')
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            )
+            // Container(
+            //   margin: EdgeInsets.only(left: 20,right: 20),
+            //   child: GetBuilder<AppLanguage>(
+            //     init: AppLanguage(),
+            //     builder: (controller) {
+            //       return Container(
+            //         // width: double.infinity,
+            //         // height: 50,
+            //         child: Center(
+            //           child: DropdownButton(
+            //             icon: Icon(Icons.language,color: Color(0xFFF2C51D),),
+            //             iconEnabledColor: Colors.white,
+            //             underline: SizedBox(),
+            //             value: myString,
+            //             onChanged: (value) async {
+            //               controller.changeLanguage('${value}');
+            //               setState(() {
+            //                 _selectedLang = '${value}';
+            //               });
+            //               Get.updateLocale(Locale(value.toString()));
+            //               SharedPreferences prefs =
+            //               await SharedPreferences.getInstance();
+            //               prefs.setString('value', '${value}');
+            //               //  print(value);
+            //               SharedPreferences x =
+            //               await SharedPreferences.getInstance();
+            //               setState(() {
+            //                 myString = x.getString('value');
+            //                 print("shared:$myString");
+            //               });
+            //             },
+            //             items: [
+            //               DropdownMenuItem(
+            //                   child: Container(
+            //                     height: 30,
+            //                     width: 100,
+            //                     color: Color(0xFFF2C51D),
+            //                     child: Center(
+            //                       child: Text(
+            //                         'English',
+            //                         style: TextStyle(
+            //                             color: Colors.white,
+            //                             fontWeight: FontWeight.bold,
+            //                             fontSize: 15),
+            //                       ),
+            //                     ),
+            //                   ),
+            //                   value: 'en'),
+            //               DropdownMenuItem(
+            //                   child: Container(
+            //                       height: 30,
+            //                       width: 100,
+            //                       color: Color(0xFFF2C51D),
+            //                       child: Center(
+            //                           child: Text('العربيه',
+            //                               style: TextStyle(
+            //                                   color: Colors.white,
+            //                                   fontWeight:
+            //                                   FontWeight.bold,
+            //                                   fontSize: 15)))),
+            //                   value: 'ar')
+            //             ],
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // )
           ],
           backgroundColor: Colors.white,
         ),
@@ -492,7 +494,7 @@ margin: EdgeInsets.only(top: 50),
               height:50,
               child:InkWell(
                 onTap: (){
-                  Navigator.push(context,MaterialPageRoute(builder:(context)=>AdminPanel()));
+                  Navigator.push(context,MaterialPageRoute(builder:(context)=>AdminLoginScreen()));
                 },
                 child: Center(
                     child:Text('Workers in Shekanda'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Noto Sans Arabic ExtraCondensed',fontSize: 12),)),

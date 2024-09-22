@@ -96,7 +96,7 @@ Map<String, String> ar = {
     'Welcome to Shekanda':'اهلا بك في شقنده',
     'Sheqanda innovates advanced and distinctive solutions and products':'شقنده تبتكر حلول ومنتجات متطوره ومميزه',
     'The experience with Sheqanda is governed by quality and a proper diet':'التجربه مع شقنده تحكمها الجوده ونظام غذائي سليم',
-    'Shqanda':'شقنده',
+    'Shqanda':'جليقية',
     'The Italian experience with Luchra':'التجربه الايطاليه مع لوتشرا',
     'luchra':'لوتشيرا',
     'Try coffee, pizza and chocolate mixed with Italian culture':'جرب القهوه,البيتزا والشيكولاته ممزوجه بالثقافه الايطاليه',
