@@ -237,13 +237,14 @@ class _CategorySectionsState extends State<CategorySections> {
   }
 
   saveItemInfo(String downloadUrl) async {
-    final itemRef = FirebaseFirestore.instance.collection('subCategories');
+    final itemRef = FirebaseFirestore.instance.collection('Categories').doc( widget.category_id).collection('sections');
     itemRef.doc(productId).set({
       'category_id': widget.category_id,
       'subCategory-id': productId,
       'title': _titleTextEditingController.text.trim(),
       'title_arabic': _titleArabicTextEditingController.text.trim(),
       'thumbnailUrl': downloadUrl
+
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();

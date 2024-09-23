@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shqanda_application/Screens/admin_shift_orders_screen.dart';
 import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
 
@@ -61,6 +60,8 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   TextEditingController();
   TextEditingController _titleArabicTextEditingController =
   TextEditingController();
+  TextEditingController _iFleetLinkTextEditingController =
+  TextEditingController(); // TextField for iFleet link
 
   String productId = DateTime.now().millisecondsSinceEpoch.toString();
   bool uploading = false;
@@ -93,26 +94,24 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       _orderNumberTextEditingController.clear();
       _titleArabicTextEditingController.clear();
       _descriptionArabicTextEditingController.clear();
+      _iFleetLinkTextEditingController.clear(); // Clear iFleet link
     });
   }
 
   saveItemInfo(String downloadUrl) async {
     final itemRef = FirebaseFirestore.instance.collection('items');
     itemRef.doc(productId).set({
-      'amount': _amountTextEditingController.text.trim(),
-      'shippingDuration': _shippingDurationTextEditingController.text.trim(),
-      'orderNum': int.parse(_orderNumberTextEditingController.text),
       'product_id': productId,
       'category_id': widget.categoryId, // Using categoryId from widget
       'subCategory_id': widget.subCategory_id, // Using subCategory_id from widget
-      'longDescription': _descriptionTextEditingController.text.trim(),
+      'longDescription': _descriptionArabicTextEditingController.text.trim(),
       'description_arabic': _descriptionArabicTextEditingController.text.trim(),
       'price': int.parse(_priceTextEditingController.text),
       'publishedDate': DateTime.now(),
-      'status': 'available',
       'title': _titleTextEditingController.text.trim(),
       'title_arabic': _titleArabicTextEditingController.text.trim(),
-      'thumbnailUrl': downloadUrl
+      'thumbnailUrl': downloadUrl,
+      'iFleetLink': _iFleetLinkTextEditingController.text.trim(), // iFleet link
     });
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -128,6 +127,7 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       _priceTextEditingController.clear();
       _titleArabicTextEditingController.clear();
       _descriptionArabicTextEditingController.clear();
+      _iFleetLinkTextEditingController.clear(); // Clear iFleet link
     });
   }
 
@@ -306,6 +306,23 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
                 controller: _titleTextEditingController,
                 decoration: InputDecoration(
                   hintText: 'Title'.tr,
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.link,
+              color: Colors.pink,
+            ),
+            title: Container(
+              width: 250,
+              child: TextField(
+                controller: _iFleetLinkTextEditingController,
+                decoration: InputDecoration(
+                  hintText: 'iFleet Link'.tr,
                   hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
                 ),

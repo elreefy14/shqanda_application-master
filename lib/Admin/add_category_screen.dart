@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart'; // Add this import for toast
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +19,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   static late SharedPreferences sharedPreferences;
   File? file;
   String selectedType = "goliqa"; // Default value for the dropdown
+  bool isSubCat = false; // New field for subcategory or products
 
   TextEditingController _titleTextEditingController = TextEditingController();
   TextEditingController _titleArabicTextEditingController = TextEditingController();
@@ -74,22 +75,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             ),
           ),
         ),
-        leading: IconButton(
-          onPressed: () {
-            Route route = MaterialPageRoute(builder: (c) => AdminShiftOrders());
-            Navigator.pushReplacement(context, route);
-          },
-          icon: Icon(Icons.border_color, color: Colors.white),
-        ),
-        actions: [
-          FlatButton(
-            onPressed: () {
-              Route route = MaterialPageRoute(builder: (c) => SplashScreen());
-              Navigator.pushReplacement(context, route);
-            },
-            child: Text('logout'.tr, style: TextStyle(color: Colors.pink, fontSize: 16, fontWeight: FontWeight.bold)),
-          ),
-        ],
+
       ),
       body: getAdminHomeScreenBody(),
     );
@@ -162,7 +148,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       file = null;
       _titleTextEditingController.clear();
       _titleArabicTextEditingController.clear();
-      selectedType = "Goliqa"; // Reset to default value
+      selectedType = "goliqa"; // Reset to default value
     });
   }
 
@@ -250,6 +236,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
               onChanged: (newValue) {
                 setState(() {
                   selectedType = newValue!;
+                  isSubCat = selectedType == 'luchra'; // Update isSubCat based on type
                 });
               },
               hint: Text("Select Type"),
@@ -263,31 +250,26 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
   saveItemInfo(String downloadUrl) async {
     final itemRef = FirebaseFirestore.instance.collection('Categories');
-    itemRef.doc(productId).set({
+    await itemRef.doc(productId).set({
       'category_id': productId,
-      'title_arabic': _titleArabicTextEditingController.text.trim(),
       'title': _titleTextEditingController.text.trim(),
-      'type': selectedType, // Save selected type
+      'title_arabic': _titleArabicTextEditingController.text.trim(),
+      'publishedDate': DateTime.now(),
+      'status': 'available',
       'thumbnailUrl': downloadUrl,
-    });
+      'isSubCat': isSubCat, // Added isSubCat field
+      'type': selectedType,
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('category_id', productId);
+    });
 
     setState(() {
+      file = null;
       uploading = false;
       productId = DateTime.now().millisecondsSinceEpoch.toString();
-      clearFormInfo(); // Clear the form
+      _titleTextEditingController.clear();
+      _titleArabicTextEditingController.clear();
+      selectedType = "goliqa";
     });
-
-    Fluttertoast.showToast(
-      msg: "تمت إضافة الفئة بنجاح", // Toast in Arabic
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
-      backgroundColor: Colors.green,
-      textColor: Colors.white,
-      fontSize: 16.0,
-    );
   }
 
   @override

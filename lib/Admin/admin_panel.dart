@@ -27,7 +27,7 @@ class _AdminPanelState extends State<AdminPanel> {
             child: Column(
               children: [
                 RaisedButton(onPressed:(){
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>AddCategoryScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>AddCategoryScreen()));
 
                 },
                   child: Text('Add Category'.tr),
@@ -37,7 +37,7 @@ class _AdminPanelState extends State<AdminPanel> {
                   ),
                 ),
                 RaisedButton(onPressed:(){
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>CategoryScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>CategoryScreen()));
                 },
                   child: Text('Show category'.tr),
                   shape: OutlineInputBorder(

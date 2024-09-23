@@ -42,7 +42,9 @@ class _ShowSubCategoriesState extends State<ShowSubCategories> {
       body: Container(
         margin: EdgeInsets.only(top: 30),
         child: StreamBuilder(
-          stream: FirebaseFirestore.instance.collection('subCategories').where('category_id' ,isEqualTo: widget.id).snapshots(),
+          //'category_id' ,isEqualTo: widget.id
+          stream: FirebaseFirestore.instance.collection('Categories').
+          doc(widget.id).collection('sections').snapshots(),
           builder: (
               BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             return GridView.builder(
@@ -80,8 +82,8 @@ class _ShowSubCategoriesState extends State<ShowSubCategories> {
                         child: Container(
                           child: Column(
                             children: [
-                              Image.network(x?['thumbnailUrl'],width: double.infinity,fit: BoxFit.cover,height: 100,),
-                              Expanded(child:myString=='en' ?Text('${x?['title']}'):Text('${x?['title_arabic']}')),
+                              Image.network(x?['picture'],width: double.infinity,fit: BoxFit.cover,height: 100,),
+                              Expanded(child:myString=='en' ?Text('${x?['name']}'):Text('${x?['name']}')),
                               Expanded(child: Container(
                                 width: double.infinity,
                                 child: RaisedButton(
