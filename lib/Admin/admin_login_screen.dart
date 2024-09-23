@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
@@ -33,28 +34,68 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   }
   final TextEditingController _adminIDTextEditing=TextEditingController();
   final TextEditingController _passwordTextEditing=TextEditingController();
-  final GlobalKey<FormState>_formKey=GlobalKey<FormState>();
-  loginAdmin() {
-    FirebaseFirestore.instance.collection('admins').get().then((snapshot){
-      snapshot.docs.forEach((result) {
-        if(result.data()['id']!=_adminIDTextEditing.text){
-       //   Scaffold.of(context).showSnackBar(SnackBar(content:Text('your id is not correct')));
-        }
-        else  if(result.data()["password"]!=_passwordTextEditing.text){
-       //   Scaffold.of(context).showSnackBar(SnackBar(content:Text('your password is not correct')));
-        }
-        else{
-         // Scaffold.of(context).showSnackBar(SnackBar(content:Text('welcome admin'+result.data()['name'])));
-         //  setState(() {
-         //    _adminIDTextEditing.text='';
-         //    _passwordTextEditing.text='';
-         //  });
-          Route route=MaterialPageRoute(builder: (c)=>AdminPanel());
-          Navigator.pushReplacement(context, route);
-        }
-      });
-    });
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GlobalKey<FormState>_formKey=GlobalKey<FormState>();
+  // Login admin using Firebase Authentication
+  void loginAdmin() async {
+    String email = _adminIDTextEditing.text;
+    String password = _passwordTextEditing.text;
+
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Check if user exists in Firestore 'admins' collection
+      DocumentSnapshot adminSnapshot = await _firestore
+          .collection('admins')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (adminSnapshot.exists) {
+        // Navigate to admin panel
+        Route route = MaterialPageRoute(builder: (c) => AdminPanel());
+        Navigator.pushReplacement(context, route);
+      } else {
+        // Show error if not an admin
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('You are not an admin')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.message}')),
+      );
+    }
+  }
+
+  // Function to add an admin
+  Future<void> addAdmin() async {
+    String email = 'admin@admin.com';
+    String password = '123456';
+
+    try {
+      // Create the admin user in Firebase Authentication
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Store admin details in Firestore 'admins' collection
+      await _firestore.collection('admins').doc(userCredential.user!.uid).set({
+        'id': userCredential.user!.uid,
+        'email': email,
+        'password': password,
+        'name': 'Admin User',
+      });
+
+      print('Admin user created successfully!');
+    } on FirebaseAuthException catch (e) {
+      print('Failed to create admin: ${e.message}');
+    }
   }
 
   @override
@@ -79,7 +120,6 @@ appBar: AppBar(
                     height: 50,
                     child:Center(child: Text('Admin'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Noto Sans Arabic ExtraCondensed',fontSize: 12),)),
                     decoration:BoxDecoration(
-
                         color:Color(0xFFF2C51D),
                         borderRadius:BorderRadius.circular(15)
                     ),

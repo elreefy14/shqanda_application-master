@@ -1,0 +1,137 @@
+{
+  "meta": {
+    "format": "JSON",
+    "version": "1.1.0",
+    "projectId": "shqanda-74a3f",
+    "resourcePath": ["Categories"],
+    "recursive": false,
+    "creationTime": 1727029121,
+    "app": "firefoo"
+  },
+  "data": {
+    "1": {
+      "category_id": "1",
+      "name": "الإفطار والعشاء",
+      "thumbnailUrl": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=396ad5ec-26e8-40d8-a437-53968fcc8967",
+      "type": "goliqa",
+      "__collections__": {
+        "sections": {
+          "1": {
+            "name": "الألبان",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01-01.jpg?alt=media&token=2e073420-18e9-4244-a6c9-0b7f6b48dfbf",
+            "subCategory-id": "1",
+            "__collections__": {}
+          },
+          "2": {
+            "name": "الخبز والحلويات",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01.jpg?alt=media&token=53897348-1aa0-4c7f-abc9-13207711e9ce",
+            "subCategory-id": "2",
+            "__collections__": {}
+          },
+          "3": {
+            "name": "البروتين",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01-01-01.jpg?alt=media&token=b2b4f95b-4065-45a0-879e-8c0ad247bbd9",
+            "subCategory-id": "3",
+            "__collections__": {}
+          }
+        }
+      }
+    },
+    "2": {
+      "category_id": "2",
+      "name": "الغداء",
+      "thumbnailUrl": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01.jpg?alt=media&token=a8006a49-38d9-41bc-9321-c94d7b9e9d08",
+      "type": "goliqa",
+      "__collections__": {
+        "sections": {
+          "1": {
+            "name": "اللحوم",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=396ad5ec-26e8-40d8-a437-53968fcc8967",
+            "subCategory-id": "1",
+            "__collections__": {}
+          },
+          "2": {
+            "name": "الأسماك",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01.jpg?alt=media&token=a8006a49-38d9-41bc-9321-c94d7b9e9d08",
+            "subCategory-id": "2",
+            "__collections__": {}
+          },
+          "3": {
+            "name": "الدجاج",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01.jpg?alt=media&token=821b9a49-92e9-42f3-ae6d-7486b36ee1e7",
+            "subCategory-id": "3",
+            "__collections__": {}
+          },
+          "4": {
+            "name": "المعكرونة والأرز",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=c2549553-67a1-40e1-a01e-bce091775774",
+            "subCategory-id": "4",
+            "__collections__": {}
+          }
+        }
+      }
+    },
+    "4": {
+      "category_id": "4",
+      "name": "القهوة",
+      "thumbnailUrl": "https://firebasestorage.googleapis.com/v0/b/shqanda-74a3f.appspot.com/o/luchera%20scene-01-01-01-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=c2ae9354-25bf-4c66-9f36-8a67684f12f2",
+      "type": "Luchra",
+      "__collections__": {
+        "sections": {
+          "1": {
+            "name": "الألبان",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01-01.jpg?alt=media&token=2e073420-18e9-4244-a6c9-0b7f6b48dfbf",
+            "subCategory-id": "1",
+            "__collections__": {}
+          },
+          "2": {
+            "name": "الخبز والحلويات",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01.jpg?alt=media&token=53897348-1aa0-4c7f-abc9-13207711e9ce",
+            "subCategory-id": "2",
+            "__collections__": {}
+          },
+          "3": {
+            "name": "البروتين",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/breakfast%20scene%20%5BRecovered%5D3-01-01-01-01-01-01.jpg?alt=media&token=b2b4f95b-4065-45a0-879e-8c0ad247bbd9",
+            "subCategory-id": "3",
+            "__collections__": {}
+          }
+        }
+      }
+    },
+    "5": {
+      "category_id": "5",
+      "name": "بيتزا",
+      "thumbnailUrl": "https://firebasestorage.googleapis.com/v0/b/shqanda-74a3f.appspot.com/o/luchera%20scene-01-01-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=6b0be64d-fd35-4b74-a06b-c3e69d29d6c3",
+      "type": "Luchra",
+      "__collections__": {
+        "sections": {
+          "1": {
+            "name": "اللحوم",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=396ad5ec-26e8-40d8-a437-53968fcc8967",
+            "subCategory-id": "1",
+            "__collections__": {}
+          },
+          "2": {
+            "name": "الأسماك",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01.jpg?alt=media&token=a8006a49-38d9-41bc-9321-c94d7b9e9d08",
+            "subCategory-id": "2",
+            "__collections__": {}
+          },
+          "3": {
+            "name": "الدجاج",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01.jpg?alt=media&token=821b9a49-92e9-42f3-ae6d-7486b36ee1e7",
+            "subCategory-id": "3",
+            "__collections__": {}
+          },
+          "4": {
+            "name": "المعكرونة والأرز",
+            "picture": "https://firebasestorage.googleapis.com/v0/b/idyllic-folio-238500.appspot.com/o/lunch%20scene.0-01-01-01-01-01-01-01-01-01-01.jpg?alt=media&token=c2549553-67a1-40e1-a01e-bce091775774",
+            "subCategory-id": "4",
+            "__collections__": {}
+          }
+        }
+      }
+    }
+  }
+}

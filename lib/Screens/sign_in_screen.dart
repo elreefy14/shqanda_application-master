@@ -312,6 +312,7 @@ margin: EdgeInsets.only(top: 50),
               // ),
               isLoading == false?
               Container(
+                height: 50,
                 width: 200,
                 child: RaisedButton(
                     child: Text('Login'.tr,style: TextStyle(color: Colors.white),),
@@ -321,9 +322,10 @@ margin: EdgeInsets.only(top: 50),
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none
                     ),
-                    onPressed: (){
+                    onPressed: () async {
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('isUserSignedIn', true);
                       Navigator.push(context, MaterialPageRoute(builder: (context)=>HomePage()));
-
                       //vaildation();
                 }),
               ): Center(
@@ -347,23 +349,23 @@ margin: EdgeInsets.only(top: 50),
               //     ),
               //   ),
               // ),
-              Container(
-                margin: EdgeInsets.only(top: 10),
-                child: Text('OR With',style: TextStyle(color: Color(0xFFF2C51D),fontSize: 16,fontWeight: FontWeight.bold),),
-              ),
-              Container(
-                margin: EdgeInsets.only(top: 10),
-                child: GoogleAuthButton(
-                  onPressed: () async{
-                    signInWithGoogle();
-                    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
-                  },
-                  darkMode: false,
-                  style:AuthButtonStyle(
-                    iconType: AuthIconType.outlined,
-                  ),
-                ),
-              ),
+              // Container(
+              //   margin: EdgeInsets.only(top: 10),
+              //   child: Text('OR With',style: TextStyle(color: Color(0xFFF2C51D),fontSize: 16,fontWeight: FontWeight.bold),),
+              // ),
+              // Container(
+              //   margin: EdgeInsets.only(top: 10),
+              //   child: GoogleAuthButton(
+              //     onPressed: () async{
+              //       signInWithGoogle();
+              //       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
+              //     },
+              //     darkMode: false,
+              //     style:AuthButtonStyle(
+              //       iconType: AuthIconType.outlined,
+              //     ),
+              //   ),
+              // ),
               // Container(
               //   margin: EdgeInsets.only(top: 20),
               //   child: FacebookAuthButton(
