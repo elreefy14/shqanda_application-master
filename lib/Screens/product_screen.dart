@@ -7,8 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 class ProductScreen extends StatefulWidget {
   final String subCategory_id;
   final String category_id;
+  final String type; // Add type parameter to determine goliqa or luchra
 
-  const ProductScreen({Key? key, required this.subCategory_id, required this.category_id}) : super(key: key);
+  const ProductScreen({
+    Key? key,
+    required this.subCategory_id,
+    required this.category_id,
+    required this.type, // Pass the type to the screen
+  }) : super(key: key);
 
   @override
   _ProductScreenState createState() => _ProductScreenState();
@@ -62,12 +68,7 @@ class _ProductScreenState extends State<ProductScreen> {
       body: Container(
         margin: const EdgeInsets.only(top: 30),
         child: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection('Products')
-              .where('section', isEqualTo: widget.subCategory_id)
-              .where('category', isEqualTo: widget.category_id)
-
-              .snapshots(),
+          stream: _getProductStream(), // Fetch data based on the type and subCategory_id
           builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
@@ -120,17 +121,11 @@ class _ProductScreenState extends State<ProductScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 10),
-                        Text(
-                          '${x['price']} EGP',
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
+
                         const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: _launchIFleetWebsite,
-                          child: const Text('Visit iFleet'),
+                          child: const Text('عرض المنتج علي افلييت'), // Arabic translation
                         ),
                       ],
                     ),
@@ -142,5 +137,28 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
       ),
     );
+  }
+
+  Stream<QuerySnapshot> _getProductStream() {
+    final bool isGoliqa = widget.type == 'goliqa';
+    final bool hasSubCategory = widget.subCategory_id.isNotEmpty;
+
+    if (isGoliqa || hasSubCategory) {
+      // Fetch products from section > subcategory > Products
+      return FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.category_id)
+          .collection('sections')
+          .doc(widget.subCategory_id)
+          .collection('products')
+          .snapshots();
+    } else {
+      // Fetch products directly from Categories > Products
+      return FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.category_id)
+          .collection('products')
+          .snapshots();
+    }
   }
 }

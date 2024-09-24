@@ -4,8 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Screens/product_screen.dart';
 class SectionScreen extends StatefulWidget {
   final String category_id;
+  final String type;
 
-  const SectionScreen({Key? key, required this.category_id}) : super(key: key);
+  const SectionScreen({Key? key, required this.category_id, required this.type}) : super(key: key);
 
   @override
   _SectionScreenState createState() => _SectionScreenState();
@@ -77,6 +78,7 @@ class _SectionScreenState extends State<SectionScreen> {
                               builder: (context) => ProductScreen(
                                 subCategory_id: x?['subCategory-id'],
                                 category_id: widget.category_id,
+                                type: widget.type,
                               ),
                             ),
                           );

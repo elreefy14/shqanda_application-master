@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
             : StreamBuilder(
           stream: FirebaseAuth.instance.authStateChanges(),
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+            if (snapshot.hasData) {
               return AdminPanel();  // Show AdminPanel if authenticated
             } else {
               return Login();  // Show Login if not authenticated

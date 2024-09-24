@@ -2,12 +2,9 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shqanda_application/Screens/admin_shift_orders_screen.dart';
-import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
 
 class AddCategoryScreen extends StatefulWidget {
@@ -75,7 +72,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             ),
           ),
         ),
-
       ),
       body: getAdminHomeScreenBody(),
     );
@@ -228,9 +224,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             title: DropdownButton<String>(
               value: selectedType,
               items: <String>['goliqa', 'luchra'].map((String value) {
+                // Show the options in Arabic to the user
+                String displayValue = value == 'goliqa' ? 'جوليقا' : 'لوتشيرا';
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(value),
+                  child: Text(displayValue), // Display Arabic labels
                 );
               }).toList(),
               onChanged: (newValue) {
@@ -252,14 +250,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     final itemRef = FirebaseFirestore.instance.collection('Categories');
     await itemRef.doc(productId).set({
       'category_id': productId,
+      'name': _titleTextEditingController.text.trim(),
       'title': _titleTextEditingController.text.trim(),
       'title_arabic': _titleArabicTextEditingController.text.trim(),
       'publishedDate': DateTime.now(),
       'status': 'available',
       'thumbnailUrl': downloadUrl,
       'isSubCat': isSubCat, // Added isSubCat field
-      'type': selectedType,
-
+      'type': selectedType, // Stored in English (goliqa or luchra)
     });
 
     setState(() {

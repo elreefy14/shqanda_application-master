@@ -241,9 +241,9 @@ class _CategorySectionsState extends State<CategorySections> {
     itemRef.doc(productId).set({
       'category_id': widget.category_id,
       'subCategory-id': productId,
-      'title': _titleTextEditingController.text.trim(),
+      'name': _titleTextEditingController.text.trim(),
       'title_arabic': _titleArabicTextEditingController.text.trim(),
-      'thumbnailUrl': downloadUrl
+      'picture': downloadUrl
 
     });
 

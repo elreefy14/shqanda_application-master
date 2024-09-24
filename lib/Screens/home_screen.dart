@@ -56,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: (){
                       Navigator.push(context, MaterialPageRoute(builder: (context)=>SectionScreen(
                           category_id: x?['category_id'],
+                        type: x?['type'],
                       )));
                         },
                         child: Card(

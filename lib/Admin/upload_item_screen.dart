@@ -9,8 +9,8 @@ import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
 
 class UploadItemScreen extends StatefulWidget {
-  final String subCategory_id;
-  final String categoryId;
+  final String? subCategory_id;
+  final String? categoryId;
 
   const UploadItemScreen({
     Key? key,
@@ -47,21 +47,9 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
 
   bool get wantKeepAlive => true;
 
-  TextEditingController _descriptionTextEditingController =
-  TextEditingController();
-  TextEditingController _descriptionArabicTextEditingController =
-  TextEditingController();
+  TextEditingController _descriptionTextEditingController = TextEditingController();
   TextEditingController _titleTextEditingController = TextEditingController();
-  TextEditingController _priceTextEditingController = TextEditingController();
-  TextEditingController _shippingDurationTextEditingController =
-  TextEditingController();
-  TextEditingController _amountTextEditingController = TextEditingController();
-  TextEditingController _orderNumberTextEditingController =
-  TextEditingController();
-  TextEditingController _titleArabicTextEditingController =
-  TextEditingController();
-  TextEditingController _iFleetLinkTextEditingController =
-  TextEditingController(); // TextField for iFleet link
+  TextEditingController _iFleetLinkTextEditingController = TextEditingController(); // TextField for iFleet link
 
   String productId = DateTime.now().millisecondsSinceEpoch.toString();
   bool uploading = false;
@@ -70,8 +58,12 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
     setState(() {
       uploading = true;
     });
-    String imageDownloadUrl = await uploadItemImage(file);
-    saveItemInfo(imageDownloadUrl);
+    if (file != null) {
+      String imageDownloadUrl = await uploadItemImage(file);
+      saveItemInfo(imageDownloadUrl);
+    } else {
+      saveItemInfo(""); // Save without image
+    }
   }
 
   Future<String> uploadItemImage(mFileImage) async {
@@ -88,48 +80,60 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       file = null;
       _descriptionTextEditingController.clear();
       _titleTextEditingController.clear();
-      _priceTextEditingController.clear();
-      _amountTextEditingController.clear();
-      _shippingDurationTextEditingController.clear();
-      _orderNumberTextEditingController.clear();
-      _titleArabicTextEditingController.clear();
-      _descriptionArabicTextEditingController.clear();
       _iFleetLinkTextEditingController.clear(); // Clear iFleet link
     });
   }
-
+//if subCategory_id not equal zero or null
+  // collection('Categories').
+  // doc('${widget.categoryId}').
+  //collection('sections').
+  //doc('subCategory_id)
+  // collection('products');
   saveItemInfo(String downloadUrl) async {
-    final itemRef = FirebaseFirestore.instance.collection('items');
-    itemRef.doc(productId).set({
+    // Initialize the reference to Firestore
+    CollectionReference itemRef;
+
+    // Check if subCategory_id is not null or '0'
+    if (widget.subCategory_id != null && widget.subCategory_id != '0') {
+      // If subCategory_id is valid, nest under 'sections' -> 'subCategory_id' -> 'products'
+      itemRef = FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.categoryId)
+          .collection('sections')
+          .doc(widget.subCategory_id)
+          .collection('products');
+    } else {
+      // Otherwise, add directly under 'products' collection
+      itemRef = FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.categoryId)
+          .collection('products');
+    }
+
+    // Set the product details
+    await itemRef.doc(productId).set({
       'product_id': productId,
-      'category_id': widget.categoryId, // Using categoryId from widget
-      'subCategory_id': widget.subCategory_id, // Using subCategory_id from widget
-      'longDescription': _descriptionArabicTextEditingController.text.trim(),
-      'description_arabic': _descriptionArabicTextEditingController.text.trim(),
-      'price': int.parse(_priceTextEditingController.text),
-      'publishedDate': DateTime.now(),
-      'title': _titleTextEditingController.text.trim(),
-      'title_arabic': _titleArabicTextEditingController.text.trim(),
-      'thumbnailUrl': downloadUrl,
+      'category': widget.categoryId ?? '0', // Using categoryId from widget
+      'section': widget.subCategory_id ?? '0', // Using subCategory_id from widget
+      'name': _titleTextEditingController.text.trim(),
+      'description': _descriptionTextEditingController.text.trim(), // Add description field
       'iFleetLink': _iFleetLinkTextEditingController.text.trim(), // iFleet link
+      'picture': downloadUrl,
+      'publishedDate': DateTime.now(),
     });
 
+    // Save subCategory-id to shared preferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('subCategory-id', widget.subCategory_id);
+    prefs.setString('subCategory-id', widget.subCategory_id ?? '0');
+
+    // Reset the form state after uploading
     setState(() {
       uploading = false;
       productId = DateTime.now().millisecondsSinceEpoch.toString();
-      _amountTextEditingController.clear();
-      _shippingDurationTextEditingController.clear();
-      _orderNumberTextEditingController.clear();
-      _titleTextEditingController.clear();
-      _descriptionTextEditingController.clear();
-      _priceTextEditingController.clear();
-      _titleArabicTextEditingController.clear();
-      _descriptionArabicTextEditingController.clear();
-      _iFleetLinkTextEditingController.clear(); // Clear iFleet link
+      clearFormInfo();
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -314,6 +318,23 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
           ),
           ListTile(
             leading: Icon(
+              Icons.description,
+              color: Colors.pink,
+            ),
+            title: Container(
+              width: 250,
+              child: TextField(
+                controller: _descriptionTextEditingController,
+                decoration: InputDecoration(
+                  hintText: 'Description'.tr,
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(
               Icons.link,
               color: Colors.pink,
             ),
@@ -330,7 +351,6 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
             ),
           ),
           Divider(color: Colors.pink),
-          // Add remaining form fields for input here as needed.
         ],
       ),
     );

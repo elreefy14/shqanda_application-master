@@ -141,6 +141,7 @@ class _HomePageState extends State<HomePage> {
                             MaterialPageRoute(
                               builder: (context) => SectionScreen(
                                 category_id: x?['category_id'],
+                                type:  x?['category_id'],
                               ),
                             ),
                           );

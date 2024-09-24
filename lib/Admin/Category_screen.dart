@@ -50,26 +50,39 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   if (snapshot.hasData) {
                     return InkWell(
                       onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => Stack(
-                            children: [
-                              Container(
-                                margin: EdgeInsets.only(top: 100),
-                                padding: EdgeInsets.only(
-                                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                                child: SingleChildScrollView(
-                                    child: UpdateCategory(
-                                      id: x?['category_id'],
-                                      image: x?['thumbnailUrl'],
-                                      title: x?['title'],
-                                      title_arabic: x?['title_arabic'],
-                                    )),
+                        if (x?['type'] == 'goliqa') {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) => Stack(
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(top: 100),
+                                  padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context).viewInsets.bottom),
+                                  child: SingleChildScrollView(
+                                      child: UpdateCategory(
+                                        id: x?['category_id'],
+                                        image: x?['thumbnailUrl'],
+                                        title: x?['title']??x?['name'],
+                                        title_arabic: x?['title_arabic']??x?['name'],
+                                      )),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          // Show snackbar indicating no subcategories in Arabic
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'لا توجد فئات فرعية لهذا العنصر'.tr, // Arabic for "This item has no subcategories"
+                                style: TextStyle(color: Colors.white),
                               ),
-                            ],
-                          ),
-                        );
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       },
                       child: Card(
                         child: Container(
@@ -99,7 +112,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                           MaterialPageRoute(
                                             builder: (context) => UploadItemScreen(
                                               categoryId: x?['category_id'], // renamed to 'categoryId'
-                                              subCategory_id: x?['category_id'], // renamed to 'subCategory_id'
+                                              subCategory_id: null, // renamed to 'subCategory_id'
                                             ),
                                           ),
                                         );
