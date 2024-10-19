@@ -42,8 +42,7 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
-  Future<void> _launchIFleetWebsite() async {
-    const url = 'https://www.ifleet.com';
+  Future<void> _launchIFleetWebsite({required String url}) async {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
@@ -121,11 +120,11 @@ class _ProductScreenState extends State<ProductScreen> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 10),
-
-                        const SizedBox(height: 10),
                         ElevatedButton(
-                          onPressed: _launchIFleetWebsite,
-                          child: const Text('عرض المنتج علي افلييت'), // Arabic translation
+                          onPressed: () async {
+                            await _launchIFleetWebsite(url: x['iFleetLink']);
+                          },
+                          child: const Text('عرض المنتج'), // Arabic translation
                         ),
                       ],
                     ),
@@ -143,7 +142,7 @@ class _ProductScreenState extends State<ProductScreen> {
     final bool isGoliqa = widget.type == 'goliqa';
     final bool hasSubCategory = widget.subCategory_id.isNotEmpty;
 
-    if (isGoliqa || hasSubCategory) {
+    if (isGoliqa) {
       // Fetch products from section > subcategory > Products
       return FirebaseFirestore.instance
           .collection('Categories')

@@ -38,7 +38,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GlobalKey<FormState>_formKey=GlobalKey<FormState>();
-  // Login admin using Firebase Authentication
+
+
   void loginAdmin() async {
     String email = _adminIDTextEditing.text;
     String password = _passwordTextEditing.text;
@@ -56,18 +57,72 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> {
           .get();
 
       if (adminSnapshot.exists) {
-        // Navigate to admin panel
+        // Show success toast and navigate to admin panel
+        Fluttertoast.showToast(
+          msg: "تم تسجيل الدخول بنجاح كمسؤول",  // "Successfully logged in as admin" in Arabic
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.green,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+
         Route route = MaterialPageRoute(builder: (c) => AdminPanel());
         Navigator.pushReplacement(context, route);
       } else {
         // Show error if not an admin
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You are not an admin')),
+        Fluttertoast.showToast(
+          msg: "أنت لست مسؤولاً",  // "You are not an admin" in Arabic
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
         );
       }
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.message}')),
+      String errorMessage;
+
+      // Handle Firebase-specific errors
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = "البريد الإلكتروني غير صحيح.";  // "The email address is invalid" in Arabic
+          break;
+        case 'user-disabled':
+          errorMessage = "تم تعطيل هذا الحساب.";  // "This user has been disabled" in Arabic
+          break;
+        case 'user-not-found':
+          errorMessage = "هذا البريد الإلكتروني غير مسجل.";  // "This email is not registered" in Arabic
+          break;
+        case 'wrong-password':
+          errorMessage = "كلمة المرور غير صحيحة.";  // "The password is incorrect" in Arabic
+          break;
+        case 'network-request-failed':
+          errorMessage = "يرجى التحقق من اتصالك بالإنترنت.";  // "Please check your internet connection" in Arabic
+          break;
+        default:
+          errorMessage = "البريد الإلكتروني او كلمة المرور غير صحيح";  // "An unknown error occurred" in Arabic
+          break;
+      }
+
+      // Show error toast
+      Fluttertoast.showToast(
+        msg: errorMessage,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+    } catch (e) {
+      // General error handling
+      Fluttertoast.showToast(
+        msg: "حدث خطأ غير معروف.",  // "An unknown error occurred" in Arabic
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
     }
   }
@@ -112,35 +167,15 @@ appBar: AppBar(
           textDirection: myString=='en'?TextDirection.ltr:TextDirection.rtl,
           child: Column(
             children: [
-              Stack(
-                children: [
-                  Container(
-                    margin: EdgeInsets.only(top: 50,right: 20,left: 170),
-                    width: 200,
-                    height: 50,
-                    child:Center(child: Text('Admin'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Noto Sans Arabic ExtraCondensed',fontSize: 12),)),
-                    decoration:BoxDecoration(
-                        color:Color(0xFFF2C51D),
-                        borderRadius:BorderRadius.circular(15)
-                    ),
-                  ),
-                  Container(
-                    margin:EdgeInsets.only(top:50,right:170,left: 20),
-                    width:200,
-                    height:50,
-                    child:InkWell(
-                      onTap: (){
-                        Navigator.push(context,MaterialPageRoute(builder:(context)=>DeliveryLogin()));
-                      },
-                      child: Center(
-                          child:Text('Delivery Boy'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Noto Sans Arabic ExtraCondensed',fontSize: 12),)),
-                    ),
-                    decoration:BoxDecoration(
-                        color:Color(0xFF9E9E9E),
-                        borderRadius: BorderRadius.circular(15)
-                    ),
-                  )
-                ],
+              Container(
+                margin: EdgeInsets.only(top: 50,),
+                width: 200,
+                height: 50,
+                child:Center(child: Text('عامل في النحاة'.tr,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontFamily: 'Noto Sans Arabic ExtraCondensed',fontSize: 18),)),
+                decoration:BoxDecoration(
+                    color:Color(0xFFF2C51D),
+                    borderRadius:BorderRadius.circular(15)
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -206,6 +241,7 @@ appBar: AppBar(
                   ),
                 ),
               ),
+
             ],
           ),
         ),

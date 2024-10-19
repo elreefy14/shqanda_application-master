@@ -49,8 +49,9 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
 
   TextEditingController _descriptionTextEditingController = TextEditingController();
   TextEditingController _titleTextEditingController = TextEditingController();
-  TextEditingController _iFleetLinkTextEditingController = TextEditingController(); // TextField for iFleet link
-
+  TextEditingController _iFleetLinkTextEditingController = TextEditingController();
+  TextEditingController _youtubeLinkTextEditingController = TextEditingController(); // Controller for YouTube link
+  String selectedType = "جليقية"; // Default value for dropdown
   String productId = DateTime.now().millisecondsSinceEpoch.toString();
   bool uploading = false;
 
@@ -80,15 +81,12 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       file = null;
       _descriptionTextEditingController.clear();
       _titleTextEditingController.clear();
-      _iFleetLinkTextEditingController.clear(); // Clear iFleet link
+      _iFleetLinkTextEditingController.clear();
+      _youtubeLinkTextEditingController.clear(); // Clear YouTube link
+      selectedType = "جليقية"; // Reset the dropdown to default
     });
   }
-//if subCategory_id not equal zero or null
-  // collection('Categories').
-  // doc('${widget.categoryId}').
-  //collection('sections').
-  //doc('subCategory_id)
-  // collection('products');
+
   saveItemInfo(String downloadUrl) async {
     // Initialize the reference to Firestore
     CollectionReference itemRef;
@@ -110,6 +108,11 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
           .collection('products');
     }
 
+    // Use YouTube link if it's provided, otherwise use downloadUrl
+    String pictureUrl = _youtubeLinkTextEditingController.text.isNotEmpty
+        ? _youtubeLinkTextEditingController.text.trim()
+        : downloadUrl;
+
     // Set the product details
     await itemRef.doc(productId).set({
       'product_id': productId,
@@ -118,8 +121,9 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       'name': _titleTextEditingController.text.trim(),
       'description': _descriptionTextEditingController.text.trim(), // Add description field
       'iFleetLink': _iFleetLinkTextEditingController.text.trim(), // iFleet link
-      'picture': downloadUrl,
+      'picture': pictureUrl, // Picture URL or YouTube link
       'publishedDate': DateTime.now(),
+      'type': selectedType, // Store the selected type
     });
 
     // Save subCategory-id to shared preferences
@@ -133,7 +137,6 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       clearFormInfo();
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -298,59 +301,110 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
               ),
             ),
           ),
-          Padding(padding: EdgeInsets.only(top: 12)),
+          Padding(
+            padding: EdgeInsets.only(top: 12),
+          ),
           ListTile(
             leading: Icon(
               Icons.perm_device_information,
-              color: Colors.pink,
+              color: Colors.green,
             ),
             title: Container(
               width: 250,
               child: TextField(
                 controller: _titleTextEditingController,
                 decoration: InputDecoration(
-                  hintText: 'Title'.tr,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintText: 'Item Title'.tr,
+                  hintStyle: TextStyle(color: Colors.green),
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
+          Divider(
+            color: Colors.green,
+          ),
           ListTile(
             leading: Icon(
-              Icons.description,
-              color: Colors.pink,
+              Icons.perm_device_information,
+              color: Colors.green,
             ),
             title: Container(
               width: 250,
               child: TextField(
                 controller: _descriptionTextEditingController,
                 decoration: InputDecoration(
-                  hintText: 'Description'.tr,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintText: 'Item Description'.tr,
+                  hintStyle: TextStyle(color: Colors.green),
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
+          Divider(
+            color: Colors.green,
+          ),
           ListTile(
             leading: Icon(
               Icons.link,
-              color: Colors.pink,
+              color: Colors.green,
             ),
             title: Container(
               width: 250,
               child: TextField(
                 controller: _iFleetLinkTextEditingController,
                 decoration: InputDecoration(
-                  hintText: 'iFleet Link'.tr,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintText: 'لينك البائع',
+                  hintStyle: TextStyle(color: Colors.green),
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
-          Divider(color: Colors.pink),
+          Divider(
+            color: Colors.green,
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.video_library,
+              color: Colors.green,
+            ),
+            title: Container(
+              width: 250,
+              child: TextField(
+                controller: _youtubeLinkTextEditingController, // YouTube link field
+                decoration: InputDecoration(
+                  hintText: 'YouTube Link'.tr,
+                  hintStyle: TextStyle(color: Colors.green),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ),
+          Divider(
+            color: Colors.green,
+          ),
+          // Dropdown for type selection
+          ListTile(
+            leading: Icon(Icons.category, color: Colors.green),
+            title: DropdownButton<String>(
+              value: selectedType,
+              items: <String>['جليقية', 'لوشيرة', 'رندة', 'اتفح', 'قمارش']
+                  .map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value), // Display Arabic labels
+                );
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  selectedType = newValue!;
+                });
+              },
+              hint: Text("Select Type"),
+            ),
+          ),
+          Divider(color: Colors.green),
         ],
       ),
     );

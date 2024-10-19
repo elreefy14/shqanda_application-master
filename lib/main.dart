@@ -49,17 +49,19 @@ class MyApp extends StatelessWidget {
         ),
         home: isUserSignedIn
             ? HomePage()  // Navigate to HomePage if user is signed in
-            : StreamBuilder(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              return AdminPanel();  // Show AdminPanel if authenticated
-            } else {
-              return Login();  // Show Login if not authenticated
-            }
-          },
-        ),
+            : checkUserAuth(),  // Directly check for Firebase Auth status
       ),
     );
+  }
+
+  Widget checkUserAuth() {
+    // Check if a user is currently authenticated
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      return AdminPanel();  // Show AdminPanel if authenticated
+    } else {
+      return Login();  // Show Login if not authenticated
+    }
   }
 }

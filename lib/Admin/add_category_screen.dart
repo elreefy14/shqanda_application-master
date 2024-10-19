@@ -15,8 +15,8 @@ class AddCategoryScreen extends StatefulWidget {
 class _AddCategoryScreenState extends State<AddCategoryScreen> {
   static late SharedPreferences sharedPreferences;
   File? file;
-  String selectedType = "goliqa"; // Default value for the dropdown
-  bool isSubCat = false; // New field for subcategory or products
+  String selectedType = "جليقية"; // Default value for the dropdown
+  bool isSubCat = false; // Field to determine if it's a subcategory
 
   TextEditingController _titleTextEditingController = TextEditingController();
   TextEditingController _titleArabicTextEditingController = TextEditingController();
@@ -144,7 +144,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       file = null;
       _titleTextEditingController.clear();
       _titleArabicTextEditingController.clear();
-      selectedType = "goliqa"; // Reset to default value
+      selectedType = "جليقية"; // Reset to default value
     });
   }
 
@@ -223,18 +223,16 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             leading: Icon(Icons.category, color: Colors.pink),
             title: DropdownButton<String>(
               value: selectedType,
-              items: <String>['goliqa', 'luchra'].map((String value) {
-                // Show the options in Arabic to the user
-                String displayValue = value == 'goliqa' ? 'جوليقا' : 'لوتشيرا';
+              items: <String>['جليقية', 'لوشيرة', 'رندة', 'اتفح', 'قمارش'].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(displayValue), // Display Arabic labels
+                  child: Text(value), // Display Arabic labels
                 );
               }).toList(),
               onChanged: (newValue) {
                 setState(() {
                   selectedType = newValue!;
-                  isSubCat = selectedType == 'luchra'; // Update isSubCat based on type
+                  isSubCat = selectedType != 'جليقية'; // Update isSubCat based on type
                 });
               },
               hint: Text("Select Type"),
@@ -257,7 +255,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       'status': 'available',
       'thumbnailUrl': downloadUrl,
       'isSubCat': isSubCat, // Added isSubCat field
-      'type': selectedType, // Stored in English (goliqa or luchra)
+      'type': selectedType, // Stored selected type
     });
 
     setState(() {
@@ -266,7 +264,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       productId = DateTime.now().millisecondsSinceEpoch.toString();
       _titleTextEditingController.clear();
       _titleArabicTextEditingController.clear();
-      selectedType = "goliqa";
+      selectedType = "جليقية";
     });
   }
 

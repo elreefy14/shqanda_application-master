@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Screens/section_screen.dart';
+import 'package:shqanda_application/Screens/sign_in_screen.dart';
+import 'package:shqanda_application/Screens/product_screen.dart'; // Assuming you have this screen
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,8 +15,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? myString;
   String _selectedLang = 'en';
-  bool useCategories2 = false; // Track whether to use 'Categories2'
-  bool isLuchraSelected = false; // Track which container is selected
+  String selectedType = 'جليقية'; // Default to 'جليقية'
+  final List<String> types = ['قمارش', 'رندة', 'اتفح', 'لوشيرة', 'جليقية']; // The five types
 
   _loadCounter() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -24,12 +26,18 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  _signOut() async {
+    // nav to Login screen
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Clear all shared preferences
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
+  }
+
   @override
   void initState() {
     super.initState();
     _loadCounter();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -38,81 +46,56 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         title: Text('Home Page'.tr),
         backgroundColor: Color(0xFFF2C51D),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _signOut, // Calls the sign out method when tapped
+          ),
+        ],
       ),
       body: Column(
         children: [
-          Expanded(
-            child: Stack(
-              children: [
-                // Luchra Container
-                Container(
-                  margin: EdgeInsets.only(top: 50, right: 20, left: 170),
-                  width: 200,
-                  height: 50,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        useCategories2 = true;
-                        isLuchraSelected = true; // Mark luchra as selected
-                      });
-                    },
-                    child: Center(
+          // Row of cards to select the type
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: types.map((type) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      selectedType = type; // Update the selected type ProductScreen
+                    });
+                  },
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    color: selectedType == type ? Colors.amber : Colors.white,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                       child: Text(
-                        'luchra'.tr,
+                        type,
                         style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans Arabic ExtraCondensed',
-                          fontSize: 12,
+                          fontSize: 18,
+                          color: selectedType == type ? Colors.white : Colors.black,
                         ),
                       ),
                     ),
                   ),
-                  decoration: BoxDecoration(
-                    color: isLuchraSelected ? Color(0xFFF2C51D) : Color(0xFF9E9E9E), // Toggle color based on selection
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                // Shqanda Container
-                Container(
-                  margin: EdgeInsets.only(top: 50, right: 170, left: 20),
-                  width: 200,
-                  height: 50,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        useCategories2 = false;
-                        isLuchraSelected = false; // Mark Shqanda as selected
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        'Shqanda'.tr,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Noto Sans Arabic ExtraCondensed',
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                  decoration: BoxDecoration(
-                    color: isLuchraSelected ? Color(0xFF9E9E9E) : Color(0xFFF2C51D), // Toggle color based on selection
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ],
+                );
+              }).toList(),
             ),
           ),
+
+          // Display categories based on selected type
           Expanded(
             flex: 3,
             child: Container(
               margin: EdgeInsets.only(top: 30),
               child: StreamBuilder(
                 stream: FirebaseFirestore.instance
-                    .collection(useCategories2 ? 'Categories' : 'Categories')
-                    .where('type', isEqualTo: useCategories2 ? 'luchra' : 'goliqa')
+                    .collection('Categories')
+                    .where('type', isEqualTo: selectedType) // Fetch data based on selected type
                     .snapshots(),
                 builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData) {
@@ -136,26 +119,63 @@ class _HomePageState extends State<HomePage> {
                         onTap: () async {
                           SharedPreferences prefs = await SharedPreferences.getInstance();
                           prefs.setString('category_id', categoryId);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SectionScreen(
-                                category_id: x?['category_id'],
-                                type:  x?['category_id'],
+
+                       //   // Navigate to SectionScreen if 'جليقية', else to ProductScreen
+                          //                     if (type == 'جليقية')
+                          //                       {
+                          //                         Navigator.push(
+                          //                           context,
+                          //                           MaterialPageRoute(
+                          //                             builder: (context) => SectionScreen(
+                          //                               category_id: '1',
+                          //                               type: type,
+                          //                             ),
+                          //                           ),
+                          //                         );
+                          //                       }
+                          //                     else
+                          //                       {
+                          //                         Navigator.push(
+                          //                           context,
+                          //                           MaterialPageRoute(
+                          //                             builder: (context) => ProductScreen(
+                          //                               subCategory_id: '1',
+                          //                               category_id: '1',
+                          //                               type: type,
+                          //                             ),
+                          //                           ),
+                          //                         );
+                          //                       }
+                          if (selectedType == 'جليقية') {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SectionScreen(
+                                  category_id: categoryId,
+                                  type: selectedType,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductScreen(
+                                  subCategory_id: categoryId,
+                                  category_id: categoryId,
+                                  type: selectedType,
+                                ),
+                              ),
+                            );
+                          }
                         },
                         child: Card(
-                          color: Colors.white.withOpacity(.9),
-                          shape: OutlineInputBorder(
-                            borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(15),
-                              bottomRight: Radius.circular(15),
-                            ),
-                            borderSide: BorderSide.none,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
+                          color: Colors.white.withOpacity(.9),
                           child: Container(
+                            padding: EdgeInsets.all(10),
                             child: Column(
                               children: [
                                 Expanded(
@@ -170,27 +190,16 @@ class _HomePageState extends State<HomePage> {
                                         Icon(Icons.error),
                                   ),
                                 ),
-                                SizedBox(height: 20),
-                                myString == 'en'
-                                    ? Text(
+                                SizedBox(height: 10),
+                                Text(
                                   '${x?['name'] ?? 'Unknown Name'}',
                                   style: TextStyle(
                                     color: Colors.black,
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'Noto Sans Arabic ExtraCondensed',
-                                  ),
-                                )
-                                    : Text(
-                                  '${x?['name'] ?? 'Unknown Name'}',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Noto Sans Arabic ExtraCondensed',
                                   ),
                                 ),
-                                SizedBox(height: 20),
+                                SizedBox(height: 10),
                               ],
                             ),
                           ),
@@ -202,19 +211,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: Container(
-              margin: EdgeInsets.only(left: MediaQuery.of(context).size.width * .75),
-              child: Image.asset(
-                'assets/group1.jpg',
-                height: 400,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
-
 }

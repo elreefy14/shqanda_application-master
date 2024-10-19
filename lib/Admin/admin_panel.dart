@@ -7,6 +7,7 @@ import 'package:shqanda_application/Admin/cart_page.dart';
 import 'package:shqanda_application/Admin/order_screen.dart';
 import 'package:shqanda_application/Admin/user_message_screen.dart';
 import 'package:shqanda_application/Screens/login_screen.dart';
+import 'package:shqanda_application/Screens/sign_in_screen.dart';
 import 'add_category_screen.dart';
 import 'upload_item_screen.dart';
 // Replace with your login screen import
@@ -24,7 +25,7 @@ class _AdminPanelState extends State<AdminPanel> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // This clears all the shared preferences
     // Redirect to login or splash screen after sign-out
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen())); // Replace with your login screen
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login())); // Replace with your login screen
   }
 
   @override
@@ -61,26 +62,26 @@ class _AdminPanelState extends State<AdminPanel> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                RaisedButton(
-                  onPressed: () async {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CartPage()));
-                  },
-                  child: Text('Show Orders'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                RaisedButton(
-                  onPressed: () async {
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserMessageScreen()));
-                  },
-                  child: Text('Show Messages'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
+                // RaisedButton(
+                //   onPressed: () async {
+                //     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => CartPage()));
+                //   },
+                //   child: Text('Show Orders'.tr),
+                //   shape: OutlineInputBorder(
+                //     borderSide: BorderSide.none,
+                //     borderRadius: BorderRadius.circular(14),
+                //   ),
+                // ),
+                // RaisedButton(
+                //   onPressed: () async {
+                //     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => UserMessageScreen()));
+                //   },
+                //   child: Text('Show Messages'.tr),
+                //   shape: OutlineInputBorder(
+                //     borderSide: BorderSide.none,
+                //     borderRadius: BorderRadius.circular(14),
+                //   ),
+                // ),
                 // Sign Out Button
                 RaisedButton(
                   onPressed: _signOut,

@@ -98,7 +98,7 @@ Map<String, String> ar = {
     'The experience with Sheqanda is governed by quality and a proper diet':'التجربه مع شقنده تحكمها الجوده ونظام غذائي سليم',
     'Shqanda':'جليقية',
     'The Italian experience with Luchra':'التجربه الايطاليه مع لوتشرا',
-    'luchra':'لوتشيرا',
+    'luchra':'لوشيرة',
     'Try coffee, pizza and chocolate mixed with Italian culture':'جرب القهوه,البيتزا والشيكولاته ممزوجه بالثقافه الايطاليه',
     'delete from cart':'حذف من العربه',
     'Start Now':'ابدا الان',
@@ -115,6 +115,6 @@ Map<String, String> ar = {
     'Description':'الوصف',
     'Amount:':'الحجم:',
     'User':'مستخدم',
-    'Workers in Shekanda':'العاملين في شقنده',
+    'Workers in Shekanda':'العاملين في النحاة',
     'Payment Way':'طريقة الدفع'
 };
