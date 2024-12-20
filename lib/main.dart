@@ -1,13 +1,10 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Add this import
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shqanda_application/Admin/admin_panel.dart';
 import 'package:shqanda_application/Provider/product_provider.dart';
 import 'package:shqanda_application/Screens/home_page.dart';
@@ -18,17 +15,54 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Check SharedPreferences for 'isUserSignedIn'
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  bool isUserSignedIn = prefs.getBool('isUserSignedIn') ?? false;
+  // Initialize auth state
+  final authState = await AuthService.initializeAuthState();
 
-  runApp(MyApp(isUserSignedIn: isUserSignedIn));
+  runApp(MyApp(initialAuthState: authState));
+}
+
+class AuthService {
+  static Future<AuthState> initializeAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final User? firebaseUser = FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser == null) {
+      return AuthState.notAuthenticated;
+    }
+
+    // Check user type from SharedPreferences
+    final String? userType = prefs.getString('userType');
+
+    if (userType == 'admin') {
+      // Verify admin status in Firestore
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(firebaseUser.uid)
+          .get();
+
+      if (adminDoc.exists) {
+        return AuthState.authenticatedAdmin;
+      }
+    } else if (userType == 'user') {
+      return AuthState.authenticatedUser;
+    }
+
+    // If no valid auth state is found, clear preferences and return not authenticated
+    await prefs.clear();
+    return AuthState.notAuthenticated;
+  }
+}
+
+enum AuthState {
+  notAuthenticated,
+  authenticatedUser,
+  authenticatedAdmin
 }
 
 class MyApp extends StatelessWidget {
-  final bool isUserSignedIn;
+  final AuthState initialAuthState;
 
-  const MyApp({Key? key, required this.isUserSignedIn}) : super(key: key);
+  const MyApp({Key? key, required this.initialAuthState}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +81,20 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: isUserSignedIn
-            ? HomePage()  // Navigate to HomePage if user is signed in
-            : checkUserAuth(),  // Directly check for Firebase Auth status
+        home: _getInitialScreen(initialAuthState),
       ),
     );
   }
 
-  Widget checkUserAuth() {
-    // Check if a user is currently authenticated
-    User? user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      return AdminPanel();  // Show AdminPanel if authenticated
-    } else {
-      return Login();  // Show Login if not authenticated
+  Widget _getInitialScreen(AuthState authState) {
+    switch (authState) {
+      case AuthState.authenticatedAdmin:
+        return AdminPanel();
+      case AuthState.authenticatedUser:
+        return HomePage();
+      case AuthState.notAuthenticated:
+      default:
+        return Login();
     }
   }
 }

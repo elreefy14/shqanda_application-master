@@ -7,13 +7,13 @@ import 'package:url_launcher/url_launcher.dart';
 class ProductScreen extends StatefulWidget {
   final String subCategory_id;
   final String category_id;
-  final String type; // Add type parameter to determine goliqa or luchra
+  final String type;
 
   const ProductScreen({
     Key? key,
     required this.subCategory_id,
     required this.category_id,
-    required this.type, // Pass the type to the screen
+    required this.type,
   }) : super(key: key);
 
   @override
@@ -21,7 +21,19 @@ class ProductScreen extends StatefulWidget {
 }
 
 class _ProductScreenState extends State<ProductScreen> {
-  YoutubePlayerController? _youtubeController;
+  Map<String, YoutubePlayerController> _controllers = {};
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _iFleetLinkController = TextEditingController();
+
+  @override
+  void dispose() {
+    _controllers.values.forEach((controller) => controller.dispose());
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _iFleetLinkController.dispose();
+    super.dispose();
+  }
 
   bool _isYoutubeLink(String? url) {
     if (url == null) return false;
@@ -32,8 +44,8 @@ class _ProductScreenState extends State<ProductScreen> {
     return YoutubePlayer.convertUrlToId(url);
   }
 
-  void _initializeYoutubeController(String videoId) {
-    _youtubeController = YoutubePlayerController(
+  YoutubePlayerController _createController(String videoId) {
+    return YoutubePlayerController(
       initialVideoId: videoId,
       flags: const YoutubePlayerFlags(
         autoPlay: false,
@@ -42,7 +54,7 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
-  Future<void> _launchIFleetWebsite({required String url}) async {
+  Future<void> _launchURL(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
@@ -50,10 +62,111 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    _youtubeController?.dispose();
-    super.dispose();
+  Future<void> _showEditDialog(BuildContext context, DocumentSnapshot doc) async {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    _nameController.text = data['name'] ?? '';
+    _descriptionController.text = data['description'] ?? '';
+    _iFleetLinkController.text = data['iFleetLink'] ?? '';
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit Product'.tr),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'Name'.tr),
+              ),
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(labelText: 'Description'.tr),
+                maxLines: 3,
+              ),
+              TextField(
+                controller: _iFleetLinkController,
+                decoration: InputDecoration(labelText: 'iFleet Link'.tr),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'.tr),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await FirebaseFirestore.instance
+                    .collection('Categories')
+                    .doc(widget.category_id)
+                    .collection('sections')
+                    .doc(widget.subCategory_id)
+                    .collection('products')
+                    .doc(doc.id)
+                    .update({
+                  'name': _nameController.text,
+                  'description': _descriptionController.text,
+                  'iFleetLink': _iFleetLinkController.text,
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Product updated successfully'.tr)),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error updating product: $e')),
+                );
+              }
+            },
+            child: Text('Save'.tr),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaContent(String? mediaUrl, String productId) {
+    if (mediaUrl == null || mediaUrl.isEmpty) {
+      return Container(
+        height: 200,
+        child: Center(child: Text('No media available')),
+      );
+    }
+
+    if (_isYoutubeLink(mediaUrl)) {
+      String? videoId = _extractYoutubeVideoId(mediaUrl);
+      if (videoId == null) return Container();
+
+      if (!_controllers.containsKey(productId)) {
+        _controllers[productId] = _createController(videoId);
+      }
+
+      return YoutubePlayer(
+        controller: _controllers[productId]!,
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: Colors.red,
+        progressColors: ProgressBarColors(
+          playedColor: Colors.red,
+          handleColor: Colors.redAccent,
+        ),
+      );
+    } else {
+      return Image.network(
+        mediaUrl,
+        height: 200,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 200,
+          child: Center(child: Icon(Icons.error)),
+        ),
+      );
+    }
   }
 
   @override
@@ -64,100 +177,88 @@ class _ProductScreenState extends State<ProductScreen> {
         title: Text('Products'.tr),
         centerTitle: true,
       ),
-      body: Container(
-        margin: const EdgeInsets.only(top: 30),
-        child: StreamBuilder(
-          stream: _getProductStream(), // Fetch data based on the type and subCategory_id
-          builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return ListView.builder(
-              itemCount: snapshot.data?.docs.length ?? 0,
-              itemBuilder: (context, i) {
-                QueryDocumentSnapshot? x = snapshot.data?.docs[i];
-                if (x == null) return Container();
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('Categories')
+            .doc(widget.category_id)
+            .collection('sections')
+            .doc(widget.subCategory_id)
+            .collection('products')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-                String? pictureUrl = x['picture'];
-                bool isYoutube = _isYoutubeLink(pictureUrl);
-                String? youtubeVideoId = _extractYoutubeVideoId(pictureUrl ?? '');
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                if (isYoutube && youtubeVideoId != null) {
-                  _initializeYoutubeController(youtubeVideoId);
-                }
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              var doc = snapshot.data!.docs[index];
+              Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-                return Card(
-                  shape: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        if (isYoutube && youtubeVideoId != null)
-                          YoutubePlayer(
-                            controller: _youtubeController!,
-                            showVideoProgressIndicator: true,
-                            progressIndicatorColor: Colors.red,
-                          )
-                        else
-                          Image.network(
-                            pictureUrl ?? '',
-                            width: double.infinity,
-                            height: 200,
-                            errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.error),
+              return Card(
+                margin: EdgeInsets.all(8.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit, color: Color(0xFFF2C51D)),
+                            onPressed: () => _showEditDialog(context, doc),
                           ),
-                        const SizedBox(height: 10),
-                        Text(
-                          '${x['name']}',
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                        ],
+                      ),
+                      _buildMediaContent(data['picture'], doc.id),
+                      SizedBox(height: 12),
+                      Text(
+                        data['name'] ?? 'No name',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        data['description'] ?? 'No description',
+                        style: TextStyle(
+                          color: Colors.black,
+                        ),
+                      ),
+                      if (data['iFleetLink'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12.0),
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                _launchURL(data['iFleetLink']),
+                            icon: Icon(Icons.shopping_cart),
+                            label: Text('عرض المنتج'.tr),
+                            style: ElevatedButton.styleFrom(
+                              primary: Color(0xFFF2C51D),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _launchIFleetWebsite(url: x['iFleetLink']);
-                          },
-                          child: const Text('عرض المنتج'), // Arabic translation
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
-  }
-
-  Stream<QuerySnapshot> _getProductStream() {
-    final bool isGoliqa = widget.type == 'goliqa';
-    final bool hasSubCategory = widget.subCategory_id.isNotEmpty;
-
-    if (isGoliqa) {
-      // Fetch products from section > subcategory > Products
-      return FirebaseFirestore.instance
-          .collection('Categories')
-          .doc(widget.category_id)
-          .collection('sections')
-          .doc(widget.subCategory_id)
-          .collection('products')
-          .snapshots();
-    } else {
-      // Fetch products directly from Categories > Products
-      return FirebaseFirestore.instance
-          .collection('Categories')
-          .doc(widget.category_id)
-          .collection('products')
-          .snapshots();
-    }
   }
 }

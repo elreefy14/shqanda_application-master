@@ -232,7 +232,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
               onChanged: (newValue) {
                 setState(() {
                   selectedType = newValue!;
-                  isSubCat = selectedType != 'جليقية'; // Update isSubCat based on type
+                //isSubCat = selectedType != 'جليقية'; // Update isSubCat based on type
+                  isSubCat =false; // Update isSubCat based on type
                 });
               },
               hint: Text("Select Type"),

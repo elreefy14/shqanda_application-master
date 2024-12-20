@@ -19,6 +19,7 @@ class CategorySections extends StatefulWidget {
   _CategorySectionsState createState() => _CategorySectionsState();
 }
 
+
 class _CategorySectionsState extends State<CategorySections> {
   File? file;
 

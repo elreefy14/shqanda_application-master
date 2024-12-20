@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Screens/splash_screen.dart';
@@ -25,6 +25,7 @@ class UploadItemScreen extends StatefulWidget {
 class _UploadItemScreenState extends State<UploadItemScreen> {
   static late SharedPreferences sharedPreferences;
   File? file;
+  bool isYouTubeLink = false; // Toggle for YouTube link input
 
   capturePhotoWithCamera() async {
     Navigator.pop(context);
@@ -59,17 +60,17 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
     setState(() {
       uploading = true;
     });
+
     if (file != null) {
       String imageDownloadUrl = await uploadItemImage(file);
       saveItemInfo(imageDownloadUrl);
     } else {
-      saveItemInfo(""); // Save without image
+      saveItemInfo(""); // Save without image if only YouTube link is provided
     }
   }
 
   Future<String> uploadItemImage(mFileImage) async {
-    var storageReference =
-    FirebaseStorage.instance.ref().child('Items').child(productId);
+    var storageReference = FirebaseStorage.instance.ref().child('Items').child(productId);
     UploadTask uploadTask = storageReference.putFile(mFileImage);
     TaskSnapshot taskSnapshot = await uploadTask;
     String downloadURL = await taskSnapshot.ref.getDownloadURL();
@@ -109,7 +110,7 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
     }
 
     // Use YouTube link if it's provided, otherwise use downloadUrl
-    String pictureUrl = _youtubeLinkTextEditingController.text.isNotEmpty
+    String pictureUrl = isYouTubeLink && _youtubeLinkTextEditingController.text.isNotEmpty
         ? _youtubeLinkTextEditingController.text.trim()
         : downloadUrl;
 
@@ -140,7 +141,7 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return file == null ? displayAdminHomeScreen() : displayAdminUploadScreen();
+    return file == null && !isYouTubeLink ? displayAdminHomeScreen() : displayAdminUploadScreen();
   }
 
   displayAdminHomeScreen() {
@@ -219,23 +220,28 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       builder: (con) {
         return SimpleDialog(
           title: Text(
-            'Item Image'.tr,
+            'Item Image or YouTube Link'.tr,
             style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
           ),
           children: [
             SimpleDialogOption(
               child: Text(
-                'Capture with camera'.tr,
-                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-              ),
-              onPressed: capturePhotoWithCamera,
-            ),
-            SimpleDialogOption(
-              child: Text(
-                'Select from Gallery'.tr,
+                'Select Image from Gallery'.tr,
                 style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
               ),
               onPressed: pickImageFromGallery,
+            ),
+            SimpleDialogOption(
+              child: Text(
+                'Enter YouTube Link'.tr,
+                style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                setState(() {
+                  isYouTubeLink = true; // Switch to YouTube link input
+                  Navigator.pop(context);
+                });
+              },
             ),
             SimpleDialogOption(
               child: Text(
@@ -285,7 +291,34 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       body: ListView(
         children: [
           uploading ? circularProgress() : Text(''),
-          Container(
+          isYouTubeLink
+              ? Column(
+                children: [
+                  ListTile(
+            leading: Icon(
+                  Icons.link,
+                  color: Colors.green,
+            ),
+            title: Container(
+                  width: 250,
+                  child: TextField(
+                    controller: _youtubeLinkTextEditingController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter YouTube Link'.tr,
+                      hintStyle: TextStyle(color: Colors.green),
+                      border: InputBorder.none,
+                    ),
+                  ),
+            ),
+          ),
+                  Divider(
+                    color: Colors.green,
+                  ),
+                ],
+              )
+
+              : file != null
+              ? Container(
             height: 230,
             width: MediaQuery.of(context).size.width * 0.8,
             child: Center(
@@ -300,10 +333,12 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
                 ),
               ),
             ),
-          ),
+          )
+              : Text('No image selected or YouTube link entered'),
           Padding(
             padding: EdgeInsets.only(top: 12),
           ),
+
           ListTile(
             leading: Icon(
               Icons.perm_device_information,
@@ -364,27 +399,6 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
           Divider(
             color: Colors.green,
           ),
-          ListTile(
-            leading: Icon(
-              Icons.video_library,
-              color: Colors.green,
-            ),
-            title: Container(
-              width: 250,
-              child: TextField(
-                controller: _youtubeLinkTextEditingController, // YouTube link field
-                decoration: InputDecoration(
-                  hintText: 'YouTube Link'.tr,
-                  hintStyle: TextStyle(color: Colors.green),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ),
-          Divider(
-            color: Colors.green,
-          ),
-          // Dropdown for type selection
           ListTile(
             leading: Icon(Icons.category, color: Colors.green),
             title: DropdownButton<String>(

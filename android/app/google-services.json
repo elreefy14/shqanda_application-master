@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1064355861085-1tfbvh751ecs56fa484snv9tjmm7anpm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.biazin.shqanda",
+            "certificate_hash": "5f26dcd35e86f355e67da5b23283e72a546d07f8"
+          }
+        },
+        {
           "client_id": "1064355861085-25t9ia5hl9g3j3pu1b60hburfn5mudpg.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

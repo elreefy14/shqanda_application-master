@@ -50,7 +50,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   if (snapshot.hasData) {
                     return InkWell(
                       onTap: () {
-                        if (x?['type'] == 'goliqa') {
+                      //  if (x?['type'] == 'goliqa') {
+                        if (true) {
                           showModalBottomSheet(
                             context: context,
                             isScrollControlled: true,

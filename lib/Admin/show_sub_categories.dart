@@ -55,28 +55,28 @@ class _ShowSubCategoriesState extends State<ShowSubCategories> {
                   if(snapshot.hasData){
                     return InkWell(
                       onTap:(){
-                        showModalBottomSheet(
-                          context:context,
-                          isScrollControlled:true,
-                          builder:(context) =>Stack(
-                            children:[
-                              Container(
-                                margin:EdgeInsets.only(top:100),
-                                // height: 600,
-                                padding:EdgeInsets.only(
-                                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                                child:SingleChildScrollView(child:SubCategoryBottomSheet(
-                                  category_id: widget.id,
-                                  id: x?['subCategory-id'],
-                                  title_arabic: x?['title_arabic'],
-                                  title: x?['title'],
-                                  image: x?['thumbnailUrl'],
-                                )),
-                              ),
-
-                            ],
-                          ),
-                        );
+                        // showModalBottomSheet(
+                        //   context:context,
+                        //   isScrollControlled:true,
+                        //   builder:(context) =>Stack(
+                        //     children:[
+                        //       Container(
+                        //         margin:EdgeInsets.only(top:100),
+                        //         // height: 600,
+                        //         padding:EdgeInsets.only(
+                        //             bottom: MediaQuery.of(context).viewInsets.bottom),
+                        //         child:SingleChildScrollView(child:SubCategoryBottomSheet(
+                        //           category_id: widget.id,
+                        //           id: x?['subCategory-id'],
+                        //           title_arabic: x?['title_arabic'],
+                        //           title: x?['title'],
+                        //           image: x?['thumbnailUrl'],
+                        //         )),
+                        //       ),
+                        //
+                        //     ],
+                        //   ),
+                        // );
                       },
                       child: Card(
                         child: Container(
