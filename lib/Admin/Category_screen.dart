@@ -35,6 +35,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
       appBar: AppBar(
         backgroundColor: Color(0xFFF2C51D),
         title: Text('Categories'.tr),
+
       ),
       body: Container(
         margin: EdgeInsets.only(top: 30),

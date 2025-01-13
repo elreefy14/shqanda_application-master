@@ -9,6 +9,8 @@ import 'package:shqanda_application/Screens/sign_in_screen.dart';
 import 'package:shqanda_application/Screens/product_screen.dart';
 import 'package:shqanda_application/Screens/user_profile_screen.dart';
 
+import '../Admin/admin_panel.dart';
+
 class HomePage extends StatefulWidget {
   final bool isAdminView;
 
@@ -55,7 +57,11 @@ class _HomePageState extends State<HomePage> {
   _signOut() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
+    //     onPressed: () => Navigator.push(
+    //   context,
+    //   MaterialPageRoute(builder: (context) => AdminPanel()),
+    // ),
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => AdminPanel()));
   }
 
   @override

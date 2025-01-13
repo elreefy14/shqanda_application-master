@@ -62,6 +62,25 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
+  Future<void> _launchWhatsApp(Map<String, dynamic> productData) async {
+    final message = '''
+      New Order:
+      Product: ${productData['name']}
+      Price: ${productData['price']} EGP
+      Description: ${productData['description']}
+    ''';
+
+    final whatsappUrl = "whatsapp://send?phone=+201093581482&text=${Uri.encodeComponent(message)}";
+
+    if (await canLaunch(whatsappUrl)) {
+      await launch(whatsappUrl);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch WhatsApp'))
+      );
+    }
+  }
+
   Future<void> _showEditDialog(BuildContext context, DocumentSnapshot doc) async {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     _nameController.text = data['name'] ?? '';
@@ -130,7 +149,10 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
-  Widget _buildMediaContent(String? mediaUrl, String productId) {
+  Widget _buildMediaContent(Map<String, dynamic> data, String productId) {
+    final mediaUrl = data['picture'];
+    final contentType = data['contentType'] ?? 'image';
+
     if (mediaUrl == null || mediaUrl.isEmpty) {
       return Container(
         height: 200,
@@ -138,7 +160,7 @@ class _ProductScreenState extends State<ProductScreen> {
       );
     }
 
-    if (_isYoutubeLink(mediaUrl)) {
+    if (contentType == 'video') {
       String? videoId = _extractYoutubeVideoId(mediaUrl);
       if (videoId == null) return Container();
 
@@ -199,6 +221,7 @@ class _ProductScreenState extends State<ProductScreen> {
             itemBuilder: (context, index) {
               var doc = snapshot.data!.docs[index];
               Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+              bool isPhysical = data['contentType'] == 'physical';
 
               return Card(
                 margin: EdgeInsets.all(8.0),
@@ -219,7 +242,7 @@ class _ProductScreenState extends State<ProductScreen> {
                           ),
                         ],
                       ),
-                      _buildMediaContent(data['picture'], doc.id),
+                      _buildMediaContent(data, doc.id),
                       SizedBox(height: 12),
                       Text(
                         data['name'] ?? 'No name',
@@ -235,14 +258,22 @@ class _ProductScreenState extends State<ProductScreen> {
                           color: Colors.black,
                         ),
                       ),
-                      if (data['iFleetLink'] != null)
+                      if (isPhysical) ...[
+                        SizedBox(height: 8),
+                        Text(
+                          '${data['price'] ?? 0} EGP',
+                          style: TextStyle(
+                            color: Color(0xFFF2C51D),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.only(top: 12.0),
                           child: ElevatedButton.icon(
-                            onPressed: () =>
-                                _launchURL(data['iFleetLink']),
+                            onPressed: () => _launchWhatsApp(data),
                             icon: Icon(Icons.shopping_cart),
-                            label: Text('عرض المنتج'.tr),
+                            label: Text('Order via WhatsApp'.tr),
                             style: ElevatedButton.styleFrom(
                               primary: Color(0xFFF2C51D),
                               shape: RoundedRectangleBorder(
@@ -251,6 +282,22 @@ class _ProductScreenState extends State<ProductScreen> {
                             ),
                           ),
                         ),
+                      ] else if (data['iFleetLink'] != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12.0),
+                          child: ElevatedButton.icon(
+                            onPressed: () => _launchURL(data['iFleetLink']),
+                            icon: Icon(Icons.link),
+                            label: Text('Show Content'.tr),
+                            style: ElevatedButton.styleFrom(
+                              primary: Color(0xFFF2C51D),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

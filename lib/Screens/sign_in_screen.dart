@@ -198,6 +198,16 @@ class _LoginState extends State<Login> {
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
+              SizedBox(height: 20),
+              //add banner text here sying welcome to the app
+              Text(
+                'جادك الغيث',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(top: 40.0),
                 child: MyTextFormField(
@@ -223,28 +233,28 @@ class _LoginState extends State<Login> {
                 ),
               ),
               SizedBox(height: 60),
-              InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminLoginScreen()),
-                  );
-                },
-                child: Center(
-                  child: Text(
-                    'سجل الدخول كعامل في النحاه',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Noto Sans Arabic ExtraCondensed',
-                      fontSize: 12,
-                      decoration: TextDecoration.underline,
-                      decorationThickness: 2.0,
-                      decorationColor: Colors.blueAccent,
-                    ),
-                  ),
-                ),
-              ),
+              // InkWell(
+              //   onTap: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (context) => AdminLoginScreen()),
+              //     );
+              //   },
+              //   child: Center(
+              //     child: Text(
+              //       'سجل الدخول كعامل في النحاه',
+              //       style: TextStyle(
+              //         color: Colors.blue,
+              //         fontWeight: FontWeight.bold,
+              //         fontFamily: 'Noto Sans Arabic ExtraCondensed',
+              //         fontSize: 12,
+              //         decoration: TextDecoration.underline,
+              //         decorationThickness: 2.0,
+              //         decorationColor: Colors.blueAccent,
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
