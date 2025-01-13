@@ -3,7 +3,173 @@ import 'package:flutter/material.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+// physical_products_screen.dart
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+class PhysicalProductsScreen extends StatelessWidget {
+  final String categoryId;
+  final String subCategoryId;
+
+  const PhysicalProductsScreen({
+    Key? key,
+    required this.categoryId,
+    required this.subCategoryId,
+  }) : super(key: key);
+
+
+  Future<void> _launchWhatsApp(Map<String, dynamic> productData) async {
+    final message = '''
+New Order:
+Product: ${productData['name']}
+Price: ${(productData['price'] ?? 0).toStringAsFixed(0)} EGP
+Description: ${productData['description']}'''.trim();
+
+    final whatsappUrl = "whatsapp://send?phone=+201093581482&text=${Uri.encodeComponent(message)}";
+
+    try {
+      if (await canLaunch(whatsappUrl)) {
+        await launch(whatsappUrl);
+      } else {
+        print('Could not launch WhatsApp');
+      }
+    } catch (e) {
+      print('Error launching WhatsApp: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+return Scaffold(
+  appBar: AppBar(
+    backgroundColor: const Color(0xFFF2C51D),
+    title: Text('Physical Products'.tr),
+    centerTitle: true,
+  ),
+  body: StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('Categories')
+        .doc(categoryId)
+        .collection('sections')
+        .doc(subCategoryId)
+        .collection('products')
+        .where('contentType', isEqualTo: 'physical')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Center(child: Text('Error: ${snapshot.error}'));
+      }
+
+      if (!snapshot.hasData) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final products = snapshot.data!.docs;
+
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index].data() as Map<String, dynamic>;
+
+          return Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
+                      image: DecorationImage(
+                        image: NetworkImage(product['picture'] ?? ''),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          product['name'] ?? '',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          product['description'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${(product['price'] ?? 0).toStringAsFixed(0)} EGP',
+                          style: const TextStyle(
+                            color: Color(0xFFF2C51D),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                    Expanded(
+                    child: SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                await _launchWhatsApp(product);
+                              },
+                              icon: const Icon(Icons.shopping_cart, size: 16),
+                              label: Text('Order Now'.tr),
+                              style: ElevatedButton.styleFrom(
+                                primary: Color(0xFFF2C51D),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  ),
+);  }
+}
 class ProductScreen extends StatefulWidget {
   final String subCategory_id;
   final String category_id;
@@ -191,6 +357,7 @@ class _ProductScreenState extends State<ProductScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,6 +365,22 @@ class _ProductScreenState extends State<ProductScreen> {
         backgroundColor: const Color(0xFFF2C51D),
         title: Text('Products'.tr),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.shopping_bag),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PhysicalProductsScreen(
+                    categoryId: widget.category_id,
+                    subCategoryId: widget.subCategory_id,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -221,7 +404,11 @@ class _ProductScreenState extends State<ProductScreen> {
             itemBuilder: (context, index) {
               var doc = snapshot.data!.docs[index];
               Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-              bool isPhysical = data['contentType'] == 'physical';
+
+              // Skip physical products as they'll be shown in their own screen
+              if (data['contentType'] == 'physical') {
+                return Container();
+              }
 
               return Card(
                 margin: EdgeInsets.all(8.0),
@@ -258,45 +445,21 @@ class _ProductScreenState extends State<ProductScreen> {
                           color: Colors.black,
                         ),
                       ),
-                      if (isPhysical) ...[
-                        SizedBox(height: 8),
-                        Text(
-                          '${data['price'] ?? 0} EGP',
-                          style: TextStyle(
-                            color: Color(0xFFF2C51D),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12.0),
-                          child: ElevatedButton.icon(
-                            onPressed: () => _launchWhatsApp(data),
-                            icon: Icon(Icons.shopping_cart),
-                            label: Text('Order via WhatsApp'.tr),
-                            style: ElevatedButton.styleFrom(
-                              primary: Color(0xFFF2C51D),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ] else if (data['iFleetLink'] != null) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12.0),
-                          child: ElevatedButton.icon(
-                            onPressed: () => _launchURL(data['iFleetLink']),
-                            icon: Icon(Icons.link),
-                            label: Text('Show Content'.tr),
-                            style: ElevatedButton.styleFrom(
-                              primary: Color(0xFFF2C51D),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                        ),
+                      if (data['iFleetLink'] != null) ...[
+                        // Padding(
+                        //   padding: const EdgeInsets.only(top: 12.0),
+                        //   child: ElevatedButton.icon(
+                        //     onPressed: () => _launchURL(data['iFleetLink']),
+                        //     icon: Icon(Icons.link),
+                        //     label: Text('Show Content'.tr),
+                        //     style: ElevatedButton.styleFrom(
+                        //       primary: Color(0xFFF2C51D),
+                        //       shape: RoundedRectangleBorder(
+                        //         borderRadius: BorderRadius.circular(8),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ],
                   ),
