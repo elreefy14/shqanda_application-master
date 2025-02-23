@@ -222,7 +222,8 @@ class _LoginState extends State<Login> {
                 height: 50,
                 width: 200,
                 child: ElevatedButton(
-                  child: Text('Login', style: TextStyle(color: Colors.white)),
+                  child: Text('تسجيل الدخول', style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
                     primary: Color(0xFFF2C51D),
                     shape: RoundedRectangleBorder(

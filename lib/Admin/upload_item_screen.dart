@@ -8,11 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
 
-enum ContentType {
-  video,
-  image,
-  physical
-}
+enum ContentType { video, image, physical }
 
 class UploadItemScreen extends StatefulWidget {
   final String? subCategory_id;
@@ -33,153 +29,249 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   File? file;
   bool isYouTubeLink = false;
   ContentType selectedContentType = ContentType.physical;
-  final TextEditingController _priceController = TextEditingController();
-
-  TextEditingController _descriptionTextEditingController = TextEditingController();
-  TextEditingController _titleTextEditingController = TextEditingController();
-  TextEditingController _iFleetLinkTextEditingController = TextEditingController();
-  TextEditingController _youtubeLinkTextEditingController = TextEditingController();
   String selectedType = "جليقية";
   String productId = DateTime.now().millisecondsSinceEpoch.toString();
   bool uploading = false;
 
-  capturePhotoWithCamera() async {
-    Navigator.pop(context);
-    var imageFile = await ImagePicker.platform.pickImage(
-        source: ImageSource.camera, maxWidth: 680, maxHeight: 790);
+  // Controllers
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _iFleetLinkController = TextEditingController();
+  final TextEditingController _youtubeLinkController = TextEditingController();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final imageFile = await ImagePicker.platform.pickImage(source: source);
     if (imageFile != null) {
       setState(() {
         file = File(imageFile.path);
-        selectedContentType = ContentType.image;
+        if (selectedContentType == ContentType.physical) {
+          _showProductDetailsDialog();
+        } else {
+          selectedContentType = ContentType.image;
+        }
       });
     }
   }
 
-  pickImageFromGallery() async {
-    Navigator.pop(context);
-    var imageFile = await ImagePicker.platform.pickImage(
-      source: ImageSource.gallery,
+  Future<String> _uploadImage(File imageFile) async {
+    final storageRef = FirebaseStorage.instance.ref().child('Items').child(productId);
+    final uploadTask = storageRef.putFile(imageFile);
+    final snapshot = await uploadTask;
+    return await snapshot.ref.getDownloadURL();
+  }
+
+  Widget _buildProductDetailsForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildTextField(
+          controller: _titleController,
+          label: 'Title'.tr,
+          icon: Icons.title,
+        ),
+        const SizedBox(height: 8),
+        _buildTextField(
+          controller: _descriptionController,
+          label: 'Description'.tr,
+          icon: Icons.description,
+          maxLines: 3,
+        ),
+        if (selectedContentType == ContentType.physical) ...[
+          const SizedBox(height: 8),
+          _buildTextField(
+            controller: _priceController,
+            label: 'Price (EGP)'.tr,
+            icon: Icons.money,
+            keyboardType: TextInputType.number,
+          ),
+        ],
+        const SizedBox(height: 8),
+        _buildTypeSelector(),
+        if (selectedContentType != ContentType.physical) ...[
+          const SizedBox(height: 8),
+          _buildTextField(
+            controller: _iFleetLinkController,
+            label: 'iFleet Link'.tr,
+            icon: Icons.link,
+          ),
+        ],
+      ],
     );
-    if (imageFile != null) {
-      setState(() {
-        file = File(imageFile.path);
-        selectedContentType = ContentType.image;
-      });
-    }
   }
 
-  bool get wantKeepAlive => true;
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(icon),
+      ),
+    );
+  }
 
-  uploadImageAndSaveItemInfo() async {
-    if (!validateForm()) {
-      return;
-    }
+  Widget _buildTypeSelector() {
+    return DropdownButtonFormField<String>(
+      value: selectedType,
+      decoration: InputDecoration(
+        labelText: 'Type'.tr,
+        border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.category),
+      ),
+      items: ['جليقية', 'لوشيرة', 'رندة', 'اتفح', 'قمارش'].map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: (newValue) {
+        setState(() {
+          selectedType = newValue!;
+        });
+      },
+    );
+  }
+
+  void _showProductDetailsDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Product Details'.tr),
+          content: SingleChildScrollView(
+            child: _buildProductDetailsForm(),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'.tr),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _clearForm();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Upload'.tr),
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFFF2C51D),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _uploadContent();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _uploadContent() async {
+    if (!_validateForm()) return;
 
     setState(() {
       uploading = true;
     });
 
-    String pictureUrl = "";
-    if (selectedContentType == ContentType.video) {
-      pictureUrl = _youtubeLinkTextEditingController.text.trim();
-    } else if (selectedContentType == ContentType.image && file != null) {
-      pictureUrl = await uploadItemImage(file);
+    try {
+      String contentUrl = "";
+      if (selectedContentType == ContentType.video) {
+        contentUrl = _youtubeLinkController.text.trim();
+      } else if (file != null) {
+        contentUrl = await _uploadImage(file!);
+      }
+
+      await _saveContent(contentUrl);
+
+      setState(() {
+        uploading = false;
+        _clearForm();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Content uploaded successfully'.tr))
+      );
+    } catch (e) {
+      setState(() {
+        uploading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error uploading content: $e'))
+      );
     }
-
-    await saveItemInfo(pictureUrl);
-
-    setState(() {
-      uploading = false;
-      clearFormInfo();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Item uploaded successfully'))
-    );
   }
 
-  bool validateForm() {
-    if (_titleTextEditingController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a title'))
-      );
+  bool _validateForm() {
+    if (_titleController.text.isEmpty) {
+      _showError('Please enter a title');
       return false;
     }
 
-    if (selectedContentType == ContentType.video &&
-        _youtubeLinkTextEditingController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a YouTube link'))
-      );
+    if (selectedContentType == ContentType.video && _youtubeLinkController.text.isEmpty) {
+      _showError('Please enter a YouTube link');
       return false;
     }
 
-    if (selectedContentType == ContentType.physical &&
-        _priceController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a price'))
-      );
-      return false;
+    if (selectedContentType == ContentType.physical) {
+      if (_priceController.text.isEmpty) {
+        _showError('Please enter a price');
+        return false;
+      }
+      if (file == null || file!.path.isEmpty) {
+        _showError('Please upload a product image');
+        return false;
+      }
     }
 
     return true;
   }
 
-  Future<String> uploadItemImage(File? mFileImage) async {
-    if (mFileImage == null) return "";
-
-    var storageReference = FirebaseStorage.instance.ref().child('Items').child(productId);
-    UploadTask uploadTask = storageReference.putFile(mFileImage);
-    TaskSnapshot taskSnapshot = await uploadTask;
-    String downloadURL = await taskSnapshot.ref.getDownloadURL();
-    return downloadURL;
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message.tr))
+    );
   }
 
-  void clearFormInfo() {
-    setState(() {
-      file = null;
-      _descriptionTextEditingController.clear();
-      _titleTextEditingController.clear();
-      _iFleetLinkTextEditingController.clear();
-      _youtubeLinkTextEditingController.clear();
-      _priceController.clear();
-      selectedType = "جليقية";
-      selectedContentType = ContentType.physical;
-      isYouTubeLink = false;
-    });
-  }
-
-  Future<void> saveItemInfo(String pictureUrl) async {
-    CollectionReference itemRef;
-
-    if (widget.subCategory_id != null && widget.subCategory_id != '0') {
-      itemRef = FirebaseFirestore.instance
-          .collection('Categories')
-          .doc(widget.categoryId)
-          .collection('sections')
-          .doc(widget.subCategory_id)
-          .collection('products');
-    } else {
-      itemRef = FirebaseFirestore.instance
-          .collection('Categories')
-          .doc(widget.categoryId)
-          .collection('products');
-    }
+  Future<void> _saveContent(String contentUrl) async {
+    final itemRef = widget.subCategory_id != null && widget.subCategory_id != '0'
+        ? FirebaseFirestore.instance
+        .collection('Categories')
+        .doc(widget.categoryId)
+        .collection('sections')
+        .doc(widget.subCategory_id)
+        .collection('products')
+        : FirebaseFirestore.instance
+        .collection('Categories')
+        .doc(widget.categoryId)
+        .collection('products');
 
     final productData = {
       'product_id': productId,
       'category': widget.categoryId ?? '0',
       'section': widget.subCategory_id ?? '0',
-      'name': _titleTextEditingController.text.trim(),
-      'description': _descriptionTextEditingController.text.trim(),
-      'iFleetLink': _iFleetLinkTextEditingController.text.trim(),
-      'picture': pictureUrl,
+      'name': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'picture': contentUrl,
       'publishedDate': DateTime.now(),
       'type': selectedType,
       'contentType': selectedContentType.toString().split('.').last,
     };
 
-    // Add price only for physical products
+    if (selectedContentType != ContentType.physical &&
+        _iFleetLinkController.text.isNotEmpty) {
+      productData['iFleetLink'] = _iFleetLinkController.text.trim();
+    }
+
     if (selectedContentType == ContentType.physical) {
       final price = double.tryParse(_priceController.text);
       if (price != null) {
@@ -188,38 +280,60 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       }
     }
 
-    if (selectedContentType == ContentType.physical) {
-      productData['price'] = double.tryParse(_priceController.text) ?? 0.0;
-    }
-
     await itemRef.doc(productId).set(productData);
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('subCategory-id', widget.subCategory_id ?? '0');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('subCategory-id', widget.subCategory_id ?? '0');
+  }
+
+  void _clearForm() {
+    setState(() {
+      file = null;
+      _titleController.clear();
+      _descriptionController.clear();
+      _priceController.clear();
+      _iFleetLinkController.clear();
+      _youtubeLinkController.clear();
+      selectedType = "جليقية";
+      selectedContentType = ContentType.physical;
+      isYouTubeLink = false;
+    });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return file == null && !isYouTubeLink ? displayAdminHomeScreen() : displayAdminUploadScreen();
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _iFleetLinkController.dispose();
+    _youtubeLinkController.dispose();
+    super.dispose();
   }
 
-  displayAdminHomeScreen() {
+  // Build methods from your original code remain the same
+  @override
+  Widget build(BuildContext context) {
+    return file == null && !isYouTubeLink
+        ? displayAdminHomeScreen()
+        : displayAdminUploadScreen();
+  }
+
+  Widget displayAdminHomeScreen() {
     return Scaffold(
       appBar: AppBar(
         flexibleSpace: Container(
           color: Color(0xFFF2C51D),
         ),
-        title: Text('Upload Content'.tr),
+        title: Text('رفع محتوى'),
         actions: [
           TextButton(
             onPressed: () {
-              Route route = MaterialPageRoute(builder: (c) => SplashScreen());
-              Navigator.pushReplacement(context, route);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (c) => SplashScreen()),
+              );
             },
-            child: Text(
-              'logout'.tr,
-              style: TextStyle(color: Colors.white),
-            ),
+            child: Text('logout'.tr, style: TextStyle(color: Colors.white)),
           )
         ],
       ),
@@ -254,46 +368,91 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
             ],
           ),
           SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: () {
-              if (selectedContentType == ContentType.video) {
-                setState(() {
-                  isYouTubeLink = true;
-                });
-              } else if (selectedContentType == ContentType.image) {
-                takeImage(context);
-              } else {
-                setState(() {
-                  file = File(''); // Dummy file to trigger product form
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              primary: Color(0xFFF2C51D),
-              padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+
+          if (selectedContentType == ContentType.physical)
+            Column(
+              children: [
+                Text(
+                  'Upload Product Image'.tr,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => _pickImage(ImageSource.gallery),
+                  icon: Icon(Icons.photo_library),
+                  label: Text('Choose from Gallery'.tr),
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFFF2C51D),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                if (file != null) ...[
+                  SizedBox(height: 16),
+                  Container(
+                    height: 150,
+                    width: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8),
+                      image: DecorationImage(
+                        image: FileImage(file!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            )
+          else
+            ElevatedButton(
+              onPressed: () {
+                if (selectedContentType == ContentType.video) {
+                  setState(() => isYouTubeLink = true);
+                } else if (selectedContentType == ContentType.image) {
+                  _pickImage(ImageSource.gallery);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFFF2C51D),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+              child: Text('Add New Content'.tr),
             ),
-            child: Text('Add New Content'.tr),
-          ),
+
+          if (selectedContentType == ContentType.physical && file != null) ...[
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _showProductDetailsDialog(),
+              child: Text('Add Product Details'.tr),
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFFF2C51D),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
-
   Widget _buildContentTypeButton({
     required IconData icon,
     required String label,
     required ContentType type,
   }) {
     return InkWell(
-      onTap: () {
-        setState(() {
-          selectedContentType = type;
-        });
-      },
+      onTap: () => setState(() => selectedContentType = type),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selectedContentType == type ? Color(0xFFF2C51D) : Colors.grey[200],
+          color: selectedContentType == type
+              ? Color(0xFFF2C51D)
+              : Colors.grey[200],
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -315,11 +474,8 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
         title: Text('New ${selectedContentType.toString().split('.').last}'.tr),
         actions: [
           TextButton(
-            onPressed: uploading ? null : uploadImageAndSaveItemInfo,
-            child: Text(
-              'Add'.tr,
-              style: TextStyle(color: Colors.white),
-            ),
+            onPressed: uploading ? null : _uploadContent,
+            child: Text('Add'.tr, style: TextStyle(color: Colors.white)),
           )
         ],
       ),
@@ -327,192 +483,28 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
         padding: EdgeInsets.all(16),
         children: [
           if (uploading) circularProgress(),
-
-          // Content Display
           if (selectedContentType == ContentType.video)
-            _buildYoutubeLinkInput()
-          else if (selectedContentType == ContentType.image && file != null)
-            _buildImagePreview()
-          else if (selectedContentType == ContentType.physical)
-            _buildProductForm(),
-
-          // Common Fields
-          _buildTextField(
-            controller: _titleTextEditingController,
-            hint: 'Title'.tr,
-            icon: Icons.title,
-          ),
-          _buildTextField(
-            controller: _descriptionTextEditingController,
-            hint: 'Description'.tr,
-            icon: Icons.description,
-            maxLines: 3,
-          ),
-
-          // Type Selector
-          _buildTypeSelector(),
-
-          // Additional Fields based on content type
-          if (selectedContentType == ContentType.physical) ...[
             _buildTextField(
-              controller: _priceController,
-              hint: 'Price (EGP)'.tr,
-              icon: Icons.money,
-              keyboardType: TextInputType.number,
+              controller: _youtubeLinkController,
+              label: 'YouTube Link'.tr,
+              icon: Icons.video_library,
+            )
+          else if (file != null)
+            Container(
+              height: 200,
+              margin: EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                image: DecorationImage(
+                  image: FileImage(file!),
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-            _buildTextField(
-              controller: _iFleetLinkTextEditingController,
-              hint: 'Seller Link'.tr,
-              icon: Icons.link,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildYoutubeLinkInput() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 16),
-      child: TextField(
-        controller: _youtubeLinkTextEditingController,
-        decoration: InputDecoration(
-          labelText: 'YouTube Link'.tr,
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.video_library),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePreview() {
-    return Container(
-      height: 200,
-      margin: EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        image: DecorationImage(
-          image: FileImage(file!),
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProductForm() {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 16),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Product Information'.tr,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
           SizedBox(height: 16),
-          if (file != null) _buildImagePreview(),
-          ElevatedButton(
-            onPressed: () => takeImage(context),
-            child: Text('Add Product Image'.tr),
-            style: ElevatedButton.styleFrom(
-              primary: Color(0xFFF2C51D),
-            ),
-          ),
+          _buildProductDetailsForm(),
         ],
       ),
     );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-  }) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: hint,
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(icon),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypeSelector() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: selectedType,
-        decoration: InputDecoration(
-          labelText: 'Type'.tr,
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.category),
-        ),
-        items: <String>['جليقية', 'لوشيرة', 'رندة', 'اتفح', 'قمارش']
-            .map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (newValue) {
-          setState(() {
-            selectedType = newValue!;
-          });
-        },
-      ),
-    );
-  }
-
-  void takeImage(BuildContext mContext) {
-    showDialog(
-      context: mContext,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text('Select Image'.tr),
-          children: [
-            SimpleDialogOption(
-              child: Text('Camera'.tr),
-              onPressed: capturePhotoWithCamera,
-            ),
-            SimpleDialogOption(
-              child: Text('Gallery'.tr),
-              onPressed: pickImageFromGallery,
-            ),
-            SimpleDialogOption(
-              child: Text('Cancel'.tr),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    _descriptionTextEditingController.dispose();
-    _titleTextEditingController.dispose();
-    _iFleetLinkTextEditingController.dispose();
-    _youtubeLinkTextEditingController.dispose();
-    _priceController.dispose();
-    super.dispose();
   }
 }

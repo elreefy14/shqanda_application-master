@@ -9,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../Widgets/delete_product_button.dart';
+
 class PhysicalProductsScreen extends StatelessWidget {
   final String categoryId;
   final String subCategoryId;
@@ -18,8 +20,6 @@ class PhysicalProductsScreen extends StatelessWidget {
     required this.categoryId,
     required this.subCategoryId,
   }) : super(key: key);
-
-
   Future<void> _launchWhatsApp(Map<String, dynamic> productData) async {
     final message = '''
 New Order:
@@ -42,133 +42,152 @@ Description: ${productData['description']}'''.trim();
 
   @override
   Widget build(BuildContext context) {
-return Scaffold(
-  appBar: AppBar(
-    backgroundColor: const Color(0xFFF2C51D),
-    title: Text('Physical Products'.tr),
-    centerTitle: true,
-  ),
-  body: StreamBuilder<QuerySnapshot>(
-    stream: FirebaseFirestore.instance
-        .collection('Categories')
-        .doc(categoryId)
-        .collection('sections')
-        .doc(subCategoryId)
-        .collection('products')
-        .where('contentType', isEqualTo: 'physical')
-        .snapshots(),
-    builder: (context, snapshot) {
-      if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
-      }
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF2C51D),
+        title: Text('Physical Products'.tr),
+        centerTitle: true,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('Categories')
+            .doc(categoryId)
+            .collection('sections')
+            .doc(subCategoryId)
+            .collection('products')
+            .where('contentType', isEqualTo: 'physical')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
 
-      if (!snapshot.hasData) {
-        return const Center(child: CircularProgressIndicator());
-      }
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-      final products = snapshot.data!.docs;
+          final products = snapshot.data!.docs;
 
-      return GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: products.length,
-        itemBuilder: (context, index) {
-          final product = products[index].data() as Map<String, dynamic>;
-
-          return Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          return GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.75,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      image: DecorationImage(
-                        image: NetworkImage(product['picture'] ?? ''),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final document = products[index];
+              final product = document.data() as Map<String, dynamic>;
+
+              return Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                Expanded(
-                  flex: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
+                child: Stack(
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          product['name'] ?? '',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          product['description'] ?? '',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${(product['price'] ?? 0).toStringAsFixed(0)} EGP',
-                          style: const TextStyle(
-                            color: Color(0xFFF2C51D),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                    Expanded(
-                    child: SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                await _launchWhatsApp(product);
-                              },
-                              icon: const Icon(Icons.shopping_cart, size: 16),
-                              label: Text('Order Now'.tr),
-                              style: ElevatedButton.styleFrom(
-                                primary: Color(0xFFF2C51D),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                        Expanded(
+                          flex: 2,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(12),
                               ),
+                              image: DecorationImage(
+                                image: NetworkImage(product['picture'] ?? ''),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  product['name'] ?? '',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  product['description'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${(product['price'] ?? 0).toStringAsFixed(0)} EGP',
+                                  style: const TextStyle(
+                                    color: Color(0xFFF2C51D),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                Expanded(
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () async {
+                                        await _launchWhatsApp(product);
+                                      },
+                                      icon: const Icon(Icons.shopping_cart, size: 16),
+                                      label: Text('Order Now'.tr),
+                                      style: ElevatedButton.styleFrom(
+                                        primary: Color(0xFFF2C51D),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
+                    // Add Delete button
+                    Positioned(
+                      top: 5,
+                      right: 5,
+                      child: DeleteProductButton(
+                        collectionPath: 'Categories/$categoryId/sections/$subCategoryId/products',
+                        documentId: document.id,
+                        productName: product['name'] ?? 'هذا المنتج',
+                        buttonColor: Colors.red.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
-      );
-    },
-  ),
-);  }
+      ),
+    );
+  }
+
+
 }
 class ProductScreen extends StatefulWidget {
   final String subCategory_id;
@@ -242,7 +261,7 @@ class _ProductScreenState extends State<ProductScreen> {
       await launch(whatsappUrl);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch WhatsApp'))
+          SnackBar(content: Text('Could not launch WhatsApp'))
       );
     }
   }
@@ -318,15 +337,15 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget _buildMediaContent(Map<String, dynamic> data, String productId) {
     final mediaUrl = data['picture'];
     final contentType = data['contentType'] ?? 'image';
+    final iFleetLink = data['iFleetLink'];
 
+    Widget mediaWidget;
     if (mediaUrl == null || mediaUrl.isEmpty) {
-      return Container(
+      mediaWidget = Container(
         height: 200,
         child: Center(child: Text('No media available')),
       );
-    }
-
-    if (contentType == 'video') {
+    } else if (contentType == 'video') {
       String? videoId = _extractYoutubeVideoId(mediaUrl);
       if (videoId == null) return Container();
 
@@ -334,17 +353,21 @@ class _ProductScreenState extends State<ProductScreen> {
         _controllers[productId] = _createController(videoId);
       }
 
-      return YoutubePlayer(
-        controller: _controllers[productId]!,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: Colors.red,
-        progressColors: ProgressBarColors(
-          playedColor: Colors.red,
-          handleColor: Colors.redAccent,
-        ),
+      mediaWidget = Column(
+        children: [
+          YoutubePlayer(
+            controller: _controllers[productId]!,
+            showVideoProgressIndicator: true,
+            progressIndicatorColor: Colors.red,
+            progressColors: ProgressBarColors(
+              playedColor: Colors.red,
+              handleColor: Colors.redAccent,
+            ),
+          ),
+        ],
       );
     } else {
-      return Image.network(
+      mediaWidget = Image.network(
         mediaUrl,
         height: 200,
         width: double.infinity,
@@ -355,6 +378,26 @@ class _ProductScreenState extends State<ProductScreen> {
         ),
       );
     }
+
+    return Column(
+      children: [
+        mediaWidget,
+        if (iFleetLink != null && iFleetLink.isNotEmpty) ...[
+          SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () => _launchURL(iFleetLink),
+            icon: Icon(Icons.people),
+            label: Text('عرض الرعاه'),
+            style: ElevatedButton.styleFrom(
+              primary: Color(0xFFF2C51D),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
 
@@ -415,54 +458,53 @@ class _ProductScreenState extends State<ProductScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.edit, color: Color(0xFFF2C51D)),
-                            onPressed: () => _showEditDialog(context, doc),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Color(0xFFF2C51D)),
+                                onPressed: () => _showEditDialog(context, doc),
+                              ),
+                            ],
+                          ),
+                          _buildMediaContent(data, doc.id),
+                          SizedBox(height: 12),
+                          Text(
+                            data['name'] ?? 'No name',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            data['description'] ?? 'No description',
+                            style: TextStyle(
+                              color: Colors.black,
+                            ),
                           ),
                         ],
                       ),
-                      _buildMediaContent(data, doc.id),
-                      SizedBox(height: 12),
-                      Text(
-                        data['name'] ?? 'No name',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    // Add delete button
+                    Positioned(
+                      top: 5,
+                      right: 5,
+                      child: DeleteProductButton(
+                        collectionPath: 'Categories/${widget.category_id}/sections/${widget.subCategory_id}/products',
+                        documentId: doc.id,
+                        productName: data['name'] ?? 'هذا المنتج',
+                        buttonColor: Colors.red.withOpacity(0.8),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        data['description'] ?? 'No description',
-                        style: TextStyle(
-                          color: Colors.black,
-                        ),
-                      ),
-                      if (data['iFleetLink'] != null) ...[
-                        // Padding(
-                        //   padding: const EdgeInsets.only(top: 12.0),
-                        //   child: ElevatedButton.icon(
-                        //     onPressed: () => _launchURL(data['iFleetLink']),
-                        //     icon: Icon(Icons.link),
-                        //     label: Text('Show Content'.tr),
-                        //     style: ElevatedButton.styleFrom(
-                        //       primary: Color(0xFFF2C51D),
-                        //       shape: RoundedRectangleBorder(
-                        //         borderRadius: BorderRadius.circular(8),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             },

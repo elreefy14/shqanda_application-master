@@ -31,16 +31,16 @@ class _HomePageState extends State<HomePage> {
     return (await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Exit App'.tr),
-        content: Text('?Are you sure you want to exit'),
+        title: Text('الخروج من التطبيق'.tr),
+        content: Text('؟هل أنت متأكد أنك تريد الخروج'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('No'.tr),
+            child: Text('لا'.tr),
           ),
           TextButton(
             onPressed: () => exit(0),
-            child: Text('Yes'.tr),
+            child: Text('نعم'.tr),
           ),
         ],
       ),

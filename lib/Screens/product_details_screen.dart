@@ -7,6 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Provider/product_provider.dart';
 import 'package:shqanda_application/Screens/cart_screen.dart';
 import 'package:shqanda_application/Screens/checkout_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shqanda_application/Provider/product_provider.dart';
+import 'package:shqanda_application/Screens/cart_screen.dart';
+import 'package:shqanda_application/Screens/checkout_screen.dart';
+import 'package:shqanda_application/widgets/delete_product_button.dart'; // Update with correct import path
+
 class ProductDetailsScreen extends StatefulWidget {
   final String product_id;
   final String product_description;
@@ -53,19 +64,51 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           backgroundColor: Color(0xFFF2C51D),
           title: Text('Details'.tr),
           centerTitle: true,
+          actions: [
+            // Add delete button in app bar
+            DeleteProductButton(
+              collectionPath: 'items', // Adjust this path based on your database structure
+              documentId: widget.product_id,
+              productName: myString == 'en' ? widget.title : widget.title_arabic,
+              onDeleteSuccess: () {
+                // Navigate back after successful deletion
+                Navigator.of(context).pop();
+                Fluttertoast.showToast(msg: "تم حذف المنتج بنجاح");
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           child: Column(
             children:[
-              Container(
-                margin: EdgeInsets.all(16),
-                width: double.infinity,
-                child: Card(
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(15)
+              Stack(
+                children: [
+                  Container(
+                    margin: EdgeInsets.all(16),
+                    width: double.infinity,
+                    child: Card(
+                      shape: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(15)
+                      ),
+                      child: Image.network(widget.image),
+                    ),
                   ),
-                    child:Image.network(widget.image)),
+                  // Alternative: Position delete button over image if preferred
+                  // Positioned(
+                  //   top: 20,
+                  //   right: 20,
+                  //   child: DeleteProductButton(
+                  //     collectionPath: 'items',
+                  //     documentId: widget.product_id,
+                  //     productName: myString == 'en' ? widget.title : widget.title_arabic,
+                  //     buttonColor: Colors.red.withOpacity(0.8),
+                  //     onDeleteSuccess: () {
+                  //       Navigator.of(context).pop();
+                  //     },
+                  //   ),
+                  // ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -110,8 +153,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       height:40,
                       width:130,
                       decoration:BoxDecoration(
-                      border:Border.all(color: Color(0xFFF2C51D)),
-                        borderRadius:BorderRadius.circular(15)
+                          border:Border.all(color: Color(0xFFF2C51D)),
+                          borderRadius:BorderRadius.circular(15)
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -182,100 +225,74 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: RaisedButton(
                   color:Color(0xFFF2C51D),
                   onPressed: ()async{
-                  SharedPreferences prefs = await SharedPreferences.getInstance();
-                  var id= prefs.get('UserId');
-                  final itemRef=FirebaseFirestore.instance.collection('carts');
-                  itemRef.doc(productId).set({
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    var id= prefs.get('UserId');
+                    final itemRef=FirebaseFirestore.instance.collection('carts');
+                    itemRef.doc(productId).set({
                       'cart_id':productId,
                       'productName':widget.title,
-                       'productName_arabic':widget.title_arabic,
+                      'productName_arabic':widget.title_arabic,
                       'productImage':widget.image,
                       'productAmount':widget.amount,
                       'productPrice':widget.price,
                       'ProductId':widget.product_id,
                       'productQuantity':count,
                       'UserId':'${id}',
-                  }).then((value) {
-                   Fluttertoast.showToast(msg: 'Item added to cart');
-                  });
-                  prefs.setString('ProductId', widget.product_id);
-                  prefs.setString('productAmount', widget.amount);
-                  prefs.setString('ProductName', widget.title);
-                  prefs.setString('productImage', widget.image);
-                  prefs.setInt('productQuantity',count);
-                  prefs.setInt('productPrice', widget.price);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:(ctx)=>CartScreen(
-                        name_arabic: widget.title_arabic,
-                        name:widget.title,
-                        image:widget.image,
-                        amount:widget.amount,
-                        quantity:count,
-                        price:widget.price,
-                        product_id:widget.product_id,
-                        user_id:'${id}',
+                    }).then((value) {
+                      Fluttertoast.showToast(msg: 'Item added to cart');
+                    });
+                    prefs.setString('ProductId', widget.product_id);
+                    prefs.setString('productAmount', widget.amount);
+                    prefs.setString('ProductName', widget.title);
+                    prefs.setString('productImage', widget.image);
+                    prefs.setInt('productQuantity',count);
+                    prefs.setInt('productPrice', widget.price);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder:(ctx)=>CartScreen(
+                          name_arabic: widget.title_arabic,
+                          name:widget.title,
+                          image:widget.image,
+                          amount:widget.amount,
+                          quantity:count,
+                          price:widget.price,
+                          product_id:widget.product_id,
+                          user_id:'${id}',
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
 
                   child:Row(
-                  mainAxisAlignment:MainAxisAlignment.center,
-                  children:[
-                    Icon(Icons.add_shopping_cart_outlined,color: Colors.white,),
-                    SizedBox(width:15,),
-                    Text('ADD TO CART'.tr,style: TextStyle(color: Colors.white,),),
-                  ],
+                    mainAxisAlignment:MainAxisAlignment.center,
+                    children:[
+                      Icon(Icons.add_shopping_cart_outlined,color: Colors.white,),
+                      SizedBox(width:15,),
+                      Text('ADD TO CART'.tr,style: TextStyle(color: Colors.white,),),
+                    ],
+                  ),
                 ),
+              ),
+
+              // Add a standalone delete button at the bottom if preferred
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                width: double.infinity,
+                child: DeleteProductButton(
+                  collectionPath: 'items',  // Adjust this path based on your database structure
+                  documentId: widget.product_id,
+                  productName: myString == 'en' ? widget.title : widget.title_arabic,
+                  isIconButton: false,
+                  buttonColor: Colors.red.shade700,
+                  onDeleteSuccess: () {
+                    Navigator.of(context).pop();
+                  },
                 ),
               )
             ],
           ),
         ),
-        // body:StreamBuilder (
-        //   // stream:FirebaseFirestore.instance.collection('items').where('subCategory_id',isEqualTo: widget.subCategory_id).snapshots(),
-        //   stream:FirebaseFirestore.instance.collection('items').where('product_id',isEqualTo: widget.product_id).snapshots(),
-        //   builder: (
-        //       BuildContext context,AsyncSnapshot<QuerySnapshot> snapshot) {
-        //     return GridView.builder(
-        //         itemCount: snapshot.data?.docs.length,
-        //         gridDelegate:SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,crossAxisSpacing: 6,mainAxisSpacing: 10),
-        //         itemBuilder:(context,i){
-        //           QueryDocumentSnapshot?x=snapshot.data?.docs[i];
-        //           if(snapshot.hasData){
-        //             return Card(
-        //               shape: OutlineInputBorder(
-        //                   borderRadius: BorderRadius.circular(20),
-        //                   borderSide: BorderSide.none
-        //               ),
-        //               child: Container(
-        //                 child: Column(
-        //                   children: [
-        //                     Image.network(x?['thumbnailUrl'],width: double.infinity,height: 100,),
-        //                     Expanded(child: Text('${x?['title']}')),
-        //                     Expanded(child: Text('${x?['price']}'+'EGP')),
-        //                     // Expanded(child: RaisedButton(
-        //                     //   onPressed: (){
-        //                     //     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>UploadItemScreen(
-        //                     //       category_id:x?['category_id'] ,
-        //                     //     )));
-        //                     //
-        //                     //   },
-        //                     //   child: Text('Add product'),
-        //                     // ))
-        //                   ],
-        //                 ),
-        //               ),
-        //             );
-        //           }
-        //           else{
-        //             return Center(child: CircularProgressIndicator());
-        //           }
-        //         });
-        //   },
-        // ),
       ),
     );
   }

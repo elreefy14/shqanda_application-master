@@ -240,7 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none),
                       child: Text(
-                        'Login',
+                        //make text in arabic
+                        'تسجيل الدخول',
                         style: TextStyle(color: Colors.white),
                       ),
                       onPressed: () {

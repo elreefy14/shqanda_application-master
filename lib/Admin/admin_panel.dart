@@ -66,7 +66,8 @@ class _AdminPanelState extends State<AdminPanel> {
                         MaterialPageRoute(builder: (context) => HomePage(isAdminView: true))
                     );
                   },
-                  child: Text('View User Interface'.tr),
+
+                  child: Text('عرض واجهة المستخدم'.tr),
                   shape: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(14),
