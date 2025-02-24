@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/internacionalization.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shqanda_application/Admin/Category_screen.dart';
-import 'package:shqanda_application/Admin/cart_page.dart';
-import 'package:shqanda_application/Admin/order_screen.dart';
-import 'package:shqanda_application/Admin/user_message_screen.dart';
-import 'package:shqanda_application/Screens/login_screen.dart';
+import 'package:shqanda_application/Admin/my_uploads_screen.dart';
 import 'package:shqanda_application/Screens/sign_in_screen.dart';
 import 'package:shqanda_application/Screens/home_page.dart';
 import 'add_category_screen.dart';
-import 'upload_item_screen.dart';
 
 class AdminPanel extends StatefulWidget {
   @override
@@ -22,7 +18,7 @@ class _AdminPanelState extends State<AdminPanel> {
     await FirebaseAuth.instance.signOut();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Login()));
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
   }
 
   @override
@@ -31,7 +27,13 @@ class _AdminPanelState extends State<AdminPanel> {
       appBar: AppBar(
         backgroundColor: Color(0xFFF2C51D),
         centerTitle: true,
-        title: Text('Admin Panel'.tr),
+        title: Text('لوحة التحكم'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _signOut,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -39,45 +41,79 @@ class _AdminPanelState extends State<AdminPanel> {
           child: Center(
             child: Column(
               children: [
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => AddCategoryScreen()));
-                  },
-                  child: Text('Add Category'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                RaisedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => CategoryScreen()));
-                  },
-                  child: Text('Show category'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                RaisedButton(
+                // My Uploads Button
+                ElevatedButton.icon(
+                  icon: Icon(Icons.upload_file),
+                  label: Text('منتجاتي'),
                   onPressed: () {
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HomePage(isAdminView: true))
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MyUploadsScreen()),
                     );
                   },
-
-                  child: Text('عرض واجهة المستخدم'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFFF2C51D),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                ),                RaisedButton(
-                  onPressed: _signOut,
-                  child: Text('Sign Out'.tr),
-                  shape: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(14),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.add_box),
+                  label: Text('إضافة قسم'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => AddCategoryScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFFF2C51D),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.category),
+                  label: Text('عرض الأقسام'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => CategoryScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFFF2C51D),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: Icon(Icons.preview),
+                  label: Text('عرض واجهة المستخدم'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => HomePage(isAdminView: true)),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Color(0xFFF2C51D),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
               ],

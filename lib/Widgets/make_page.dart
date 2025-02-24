@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
-import 'package:shqanda_application/Screens/sign_in_screen.dart';
 class MakePage extends StatelessWidget {
   final String title;
   final String description;

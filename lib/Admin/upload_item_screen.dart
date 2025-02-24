@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
+import '../auth_service.dart';
 
 enum ContentType { video, image, physical }
 
@@ -32,6 +33,7 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   String selectedType = "جليقية";
   String productId = DateTime.now().millisecondsSinceEpoch.toString();
   bool uploading = false;
+  String? currentUserId;
 
   // Controllers
   final TextEditingController _titleController = TextEditingController();
@@ -39,6 +41,19 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _iFleetLinkController = TextEditingController();
   final TextEditingController _youtubeLinkController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    currentUserId = await AuthService.getCurrentUserId();
+    if (currentUserId == null) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     final imageFile = await ImagePicker.platform.pickImage(source: source);
@@ -55,7 +70,8 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   }
 
   Future<String> _uploadImage(File imageFile) async {
-    final storageRef = FirebaseStorage.instance.ref().child('Items').child(productId);
+    final storageRef =
+        FirebaseStorage.instance.ref().child('Items').child(productId);
     final uploadTask = storageRef.putFile(imageFile);
     final snapshot = await uploadTask;
     return await snapshot.ref.getDownloadURL();
@@ -199,15 +215,13 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Content uploaded successfully'.tr))
-      );
+          SnackBar(content: Text('Content uploaded successfully'.tr)));
     } catch (e) {
       setState(() {
         uploading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error uploading content: $e'))
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error uploading content: $e')));
     }
   }
 
@@ -217,7 +231,8 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       return false;
     }
 
-    if (selectedContentType == ContentType.video && _youtubeLinkController.text.isEmpty) {
+    if (selectedContentType == ContentType.video &&
+        _youtubeLinkController.text.isEmpty) {
       _showError('Please enter a YouTube link');
       return false;
     }
@@ -237,23 +252,28 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message.tr))
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message.tr)));
   }
 
   Future<void> _saveContent(String contentUrl) async {
-    final itemRef = widget.subCategory_id != null && widget.subCategory_id != '0'
-        ? FirebaseFirestore.instance
-        .collection('Categories')
-        .doc(widget.categoryId)
-        .collection('sections')
-        .doc(widget.subCategory_id)
-        .collection('products')
-        : FirebaseFirestore.instance
-        .collection('Categories')
-        .doc(widget.categoryId)
-        .collection('products');
+    if (currentUserId == null) {
+      _showError('Please login to upload content');
+      return;
+    }
+
+    final itemRef =
+        widget.subCategory_id != null && widget.subCategory_id != '0'
+            ? FirebaseFirestore.instance
+                .collection('Categories')
+                .doc(widget.categoryId)
+                .collection('sections')
+                .doc(widget.subCategory_id)
+                .collection('products')
+            : FirebaseFirestore.instance
+                .collection('Categories')
+                .doc(widget.categoryId)
+                .collection('products');
 
     final productData = {
       'product_id': productId,
@@ -265,6 +285,9 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       'publishedDate': DateTime.now(),
       'type': selectedType,
       'contentType': selectedContentType.toString().split('.').last,
+      'uploadedBy': currentUserId,
+      'uploaderPhone':
+          (await SharedPreferences.getInstance()).getString('phone'),
     };
 
     if (selectedContentType != ContentType.physical &&
@@ -282,8 +305,79 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
 
     await itemRef.doc(productId).set(productData);
 
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserId)
+        .collection('uploads')
+        .doc(productId)
+        .set({
+      'productId': productId,
+      'categoryId': widget.categoryId,
+      'subCategoryId': widget.subCategory_id,
+      'uploadedAt': DateTime.now(),
+      'type': selectedContentType.toString().split('.').last,
+    });
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('subCategory-id', widget.subCategory_id ?? '0');
+  }
+
+  Future<void> _deleteContent(String productId) async {
+    if (currentUserId == null) {
+      _showError('Please login to delete content');
+      return;
+    }
+
+    try {
+      // Get the product data
+      final productDoc = await FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.categoryId)
+          .collection('products')
+          .doc(productId)
+          .get();
+
+      if (!productDoc.exists) {
+        _showError('Product not found');
+        return;
+      }
+
+      final productData = productDoc.data();
+      if (productData?['uploadedBy'] != currentUserId) {
+        _showError('You can only delete your own uploads');
+        return;
+      }
+
+      // Delete from main collection
+      await FirebaseFirestore.instance
+          .collection('Categories')
+          .doc(widget.categoryId)
+          .collection('products')
+          .doc(productId)
+          .delete();
+
+      // Delete from user's uploads collection
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .collection('uploads')
+          .doc(productId)
+          .delete();
+
+      // Delete image from storage if exists
+      if (productData?['picture'] != null &&
+          !productData!['picture'].startsWith('http://')) {
+        await FirebaseStorage.instance
+            .refFromURL(productData['picture'])
+            .delete();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Content deleted successfully'.tr)),
+      );
+    } catch (e) {
+      _showError('Error deleting content: $e');
+    }
   }
 
   void _clearForm() {
@@ -327,7 +421,8 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
         title: Text('رفع محتوى'),
         actions: [
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              await AuthService.signOut();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (c) => SplashScreen()),
@@ -337,7 +432,31 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
           )
         ],
       ),
-      body: getAdminHomeScreenBody(),
+      body: Column(
+        children: [
+          Expanded(child: getAdminHomeScreenBody()),
+          if (currentUserId != null)
+            Container(
+              padding: EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          UserUploadsScreen(userId: currentUserId!),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Color(0xFFF2C51D),
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                ),
+                child: Text('My Uploads'.tr),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -368,7 +487,6 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
             ],
           ),
           SizedBox(height: 30),
-
           if (selectedContentType == ContentType.physical)
             Column(
               children: [
@@ -424,7 +542,6 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
               ),
               child: Text('Add New Content'.tr),
             ),
-
           if (selectedContentType == ContentType.physical && file != null) ...[
             SizedBox(height: 16),
             ElevatedButton(
@@ -440,6 +557,7 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
       ),
     );
   }
+
   Widget _buildContentTypeButton({
     required IconData icon,
     required String label,
@@ -504,6 +622,141 @@ class _UploadItemScreenState extends State<UploadItemScreen> {
           SizedBox(height: 16),
           _buildProductDetailsForm(),
         ],
+      ),
+    );
+  }
+}
+
+class UserUploadsScreen extends StatelessWidget {
+  final String userId;
+
+  const UserUploadsScreen({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFFF2C51D),
+        title: Text('My Uploads'.tr),
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('uploads')
+            .orderBy('uploadedAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          final uploads = snapshot.data!.docs;
+          if (uploads.isEmpty) {
+            return Center(child: Text('No uploads yet'.tr));
+          }
+
+          return ListView.builder(
+            itemCount: uploads.length,
+            itemBuilder: (context, index) {
+              final upload = uploads[index].data() as Map<String, dynamic>;
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('Categories')
+                    .doc(upload['categoryId'])
+                    .collection('products')
+                    .doc(upload['productId'])
+                    .get(),
+                builder: (context, productSnapshot) {
+                  if (!productSnapshot.hasData) {
+                    return ListTile(
+                      title: Text('Loading...'),
+                    );
+                  }
+
+                  final productData =
+                      productSnapshot.data?.data() as Map<String, dynamic>?;
+                  if (productData == null) {
+                    return SizedBox(); // Product was deleted
+                  }
+
+                  return ListTile(
+                    leading: productData['picture'] != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              productData['picture'],
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Icon(Icons.image_not_supported),
+                    title: Text(productData['name'] ?? 'Untitled'),
+                    subtitle: Text(productData['type'] ?? ''),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text('Delete Upload'.tr),
+                            content: Text(
+                                'Are you sure you want to delete this upload?'
+                                    .tr),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text('Cancel'.tr),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text('Delete'.tr,
+                                    style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirm == true) {
+                          // Call delete method from parent
+                          await FirebaseFirestore.instance
+                              .collection('Categories')
+                              .doc(upload['categoryId'])
+                              .collection('products')
+                              .doc(upload['productId'])
+                              .delete();
+
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(userId)
+                              .collection('uploads')
+                              .doc(upload['productId'])
+                              .delete();
+
+                          if (productData['picture'] != null &&
+                              !productData['picture'].startsWith('http://')) {
+                            try {
+                              await FirebaseStorage.instance
+                                  .refFromURL(productData['picture'])
+                                  .delete();
+                            } catch (e) {
+                              print('Error deleting image: $e');
+                            }
+                          }
+                        }
+                      },
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

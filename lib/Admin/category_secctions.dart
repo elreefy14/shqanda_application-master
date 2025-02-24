@@ -6,9 +6,9 @@ import 'package:fluttertoast/fluttertoast.dart'; // Import for toast
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shqanda_application/Screens/admin_shift_orders_screen.dart';
-import 'package:shqanda_application/Screens/splash_screen.dart';
 import 'package:shqanda_application/Widgets/loading_widget.dart';
+
+import '../Screens/splash_screen.dart';
 
 class CategorySections extends StatefulWidget {
   final String category_id;

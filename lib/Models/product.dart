@@ -9,7 +9,17 @@ class Product {
   final String amount;
   final String id;
   final int quetity;
+  final String createdBy;
 
-  Product({required this.id,required this.image, required this.name, required this.price,required this.quetity,
-    required this.ordersNo,required this.description,required this.amount });
+  Product({
+    required this.id,
+    required this.image,
+    required this.name,
+    required this.price,
+    required this.quetity,
+    required this.ordersNo,
+    required this.description,
+    required this.amount,
+    required this.createdBy,
+  });
 }

@@ -1,3 +1,7 @@
+// DEPRECATED: This screen is unused and has been replaced by admin_panel.dart
+// TODO: Remove this file in the next major version update
+
+/*
 import 'package:flutter/material.dart';
 
 class AdminHomeScreen extends StatefulWidget {
@@ -11,3 +15,4 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
 }
+*/
